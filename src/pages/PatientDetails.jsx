@@ -5,7 +5,10 @@ import { usePatients } from '../context/PatientContext';
 import { personalDetailsQuestions } from '../forms/personalDetailsQuestions';
 import { healthDetailsQuestions } from '../forms/healthDetailsQuestions';
 import { backgroundDetailsQuestions } from '../forms/backgroundDetailsQuestions';
+import { nutritionInterventionQuestions } from '../forms/nutritionInterventionQuestions';
 import { biochemicalEvaluationQuestions } from '../forms/biochemicalEvaluationQuestions';
+import { anthropometricQuestions } from '../forms/anthropometricQuestions';
+import { nutritionMonitoringQuestions } from '../forms/nutritionMonitoringQuestions';
 
 function PatientDetails() {
     const navigate = useNavigate();
@@ -23,8 +26,9 @@ function PatientDetails() {
     };
 
     const filteredPatients = patients.filter(patient => {
-        const fullName = `${patient.personalDetails?.firstName} ${patient.personalDetails?.lastName}`.toLowerCase();
-        return fullName.includes(searchTerm.toLowerCase());
+        const identifier = (patient.patient_identifier || '').toLowerCase();
+        const idString = (patient.id || '').toString();
+        return identifier.includes(searchTerm.toLowerCase()) || idString.includes(searchTerm);
     });
 
     const handleViewPatient = (patient) => {
@@ -38,25 +42,23 @@ function PatientDetails() {
         setIsEditing(true);
     };
 
-    const handleInputChange = (section, field, value) => {
+    const handleInputChange = (field, value) => {
         setEditData(prev => ({
             ...prev,
-            [section]: {
-                ...prev[section],
-                [field]: value
-            }
+            [field]: value
         }));
     };
 
     const handleSaveEdit = () => {
-        updatePatient(selectedPatient.id, editData);
-        setSelectedPatient(editData);
-        setIsEditing(false);
-        alert('Patient information updated successfully!');
+        // updatePatient(selectedPatient.id, editData);
+        // setSelectedPatient(editData);
+        // setIsEditing(false);
+        // alert('Patient information updated successfully!');
+        alert('Edit functionality not yet connected to backend. Only viewing is supported via API for now.');
     };
 
-    const renderDetailSection = (title, data, section) => {
-        if (!data || Object.keys(data).length === 0) return null;
+    const renderDetailSection = (title, dataFields, section) => {
+        if (!selectedPatient) return null;
 
         return (
             <div className="mb-4">
@@ -71,51 +73,61 @@ function PatientDetails() {
                     {title}
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                    {Object.entries(data).map(([key, value]) => (
-                        <div key={key} style={{
-                            padding: '1rem',
-                            background: '#ffffff',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid #e2e8f0',
-                            boxShadow: 'var(--shadow-sm)'
-                        }}>
-                            <div style={{
-                                color: 'var(--text-muted)',
-                                fontSize: '0.875rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                marginBottom: '0.25rem'
-                            }}>
-                                {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </div>
-                            {isEditing ? (
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={editData[section]?.[key] || ''}
-                                    onChange={(e) => handleInputChange(section, key, e.target.value)}
-                                    style={{ marginTop: '0.5rem', padding: '0.5rem' }}
-                                />
-                            ) : (
-                                <div style={{
-                                    color: 'var(--text-primary)',
-                                    fontWeight: '500',
-                                    fontSize: '1rem'
-                                }}>
-                                    {(() => {
-                                        const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...biochemicalEvaluationQuestions];
-                                        const question = allQuestions.find(q => q.id === key);
-                                        const unit = question?.unit ? ` ${question.unit}` : '';
+                    {dataFields
+                        .filter(q => {
+                            if (q.type === 'heading') return false;
+                            if (q.showIf) return q.showIf(selectedPatient);
+                            return true;
+                        })
+                        .map((q) => {
+                            const value = selectedPatient[q.id];
+                            const unit = q.unit ? ` ${q.unit}` : '';
 
-                                        if (typeof value === 'object' && value !== null) {
-                                            return `${value.years || 0}y ${value.months || 0}m ${value.days || 0}d`;
-                                        }
-                                        return `${value || 'N/A'}${value ? unit : ''}`;
-                                    })()}
+                            return (
+                                <div key={q.id} style={{
+                                    padding: '1rem',
+                                    background: '#ffffff',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: 'var(--shadow-sm)',
+                                    gridColumn: q.type === 'dynamic-days' ? '1 / -1' : 'auto'
+                                }}>
+                                    <div style={{
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.875rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        marginBottom: '0.25rem'
+                                    }}>
+                                        {q.label}
+                                    </div>
+                                    <div style={{
+                                        fontWeight: '600',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '1rem'
+                                    }}>
+                                        {(() => {
+                                            if (q.type === 'dynamic-days' && Array.isArray(value)) {
+                                                return (
+                                                    <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                        {value.map((day, i) => (
+                                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                                                                <span style={{ fontSize: '0.85rem' }}>Day {i + 1}</span>
+                                                                <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            }
+
+                                            // Handle special types or missing values
+                                            if (value === null || value === undefined || value === '') return 'N/A';
+                                            return `${value}${unit}`;
+                                        })()}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            );
+                        })}
                 </div>
             </div>
         );
@@ -136,7 +148,7 @@ function PatientDetails() {
                             <input
                                 type="text"
                                 className="search-input"
-                                placeholder="Search patients by name..."
+                                placeholder="Search by identifier or ID..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -148,10 +160,10 @@ function PatientDetails() {
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Cancer Type</th>
-                                        <th>Stage</th>
-                                        <th>Diagnosis Date</th>
+                                        <th>Identifier</th>
+                                        <th>Created At</th>
+                                        <th>Gender</th>
+                                        <th>Condition</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -159,11 +171,10 @@ function PatientDetails() {
                                     {filteredPatients.length > 0 ? (
                                         filteredPatients.map((patient) => (
                                             <tr key={patient.id}>
-                                                <td>{patient.id}</td>
-                                                <td>
-                                                    {patient.personalDetails?.firstName} {patient.personalDetails?.lastName}
-                                                </td>
-                                                <td>{patient.healthDetails?.cancerType || 'N/A'}</td>
+                                                <td style={{ fontSize: '0.8rem' }}>{patient.id}</td>
+                                                <td>{patient.patient_identifier || 'N/A'}</td>
+                                                <td>{patient.created_at ? new Date(patient.created_at).toLocaleDateString() : 'N/A'}</td>
+                                                <td>{patient.gender || 'N/A'}</td>
                                                 <td>
                                                     <span style={{
                                                         padding: '0.25rem 0.75rem',
@@ -173,10 +184,9 @@ function PatientDetails() {
                                                         fontSize: '0.875rem',
                                                         fontWeight: '500'
                                                     }}>
-                                                        {patient.healthDetails?.stage || 'N/A'}
+                                                        {patient.condition_specific || 'N/A'}
                                                     </span>
                                                 </td>
-                                                <td>{patient.healthDetails?.diagnosisDate || 'N/A'}</td>
                                                 <td>
                                                     <div className="flex gap-1">
                                                         <button
@@ -185,13 +195,6 @@ function PatientDetails() {
                                                             style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                                                         >
                                                             View
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEditPatient(patient)}
-                                                            className="btn btn-secondary"
-                                                            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                                                        >
-                                                            Edit
                                                         </button>
                                                     </div>
                                                 </td>
@@ -233,17 +236,20 @@ function PatientDetails() {
                             border: '1px solid rgba(59, 130, 246, 0.2)'
                         }}>
                             <div style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                                {selectedPatient.personalDetails?.firstName} {selectedPatient.personalDetails?.lastName}
+                                {selectedPatient.patient_identifier || 'No Identifier'}
                             </div>
                             <div style={{ color: 'var(--text-secondary)' }}>
-                                Patient ID: {selectedPatient.id}
+                                Internal ID: {selectedPatient.id}
                             </div>
                         </div>
 
-                        {renderDetailSection('Patients Identification', selectedPatient.personalDetails, 'personalDetails')}
-                        {renderDetailSection('Health Details', selectedPatient.healthDetails, 'healthDetails')}
-                        {renderDetailSection('Background Details', selectedPatient.backgroundDetails, 'backgroundDetails')}
-                        {renderDetailSection('Biochemical Evaluation', selectedPatient.miscellaneous, 'miscellaneous')}
+                        {renderDetailSection('Personal Details', personalDetailsQuestions, 'personalDetails')}
+                        {renderDetailSection('Medical History', healthDetailsQuestions, 'healthDetails')}
+                        {renderDetailSection('Dietetic Assessment', backgroundDetailsQuestions, 'backgroundDetails')}
+                        {renderDetailSection('Nutrition Interventional Plans', nutritionInterventionQuestions, 'nutritionIntervention')}
+                        {renderDetailSection('Anthropometric & Strength Evaluation', anthropometricQuestions, 'anthropometric')}
+                        {renderDetailSection('Biochemical Evaluation', biochemicalEvaluationQuestions, 'miscellaneous')}
+                        {renderDetailSection('Nutrition Monitoring', nutritionMonitoringQuestions, 'nutritionMonitoring')}
 
                         {isEditing && (
                             <div className="flex gap-2 mt-4">

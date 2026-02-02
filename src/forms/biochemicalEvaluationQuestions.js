@@ -1,11 +1,4 @@
-export const biochemicalEvaluationQuestions = [
-    {
-        id: 'evaluationDone',
-        label: 'Biochemical Evaluations Done?',
-        type: 'select',
-        options: ['Yes', 'No'],
-        required: true
-    },
+const baseQuestions = [
     {
         id: 'hemoglobin',
         label: 'Hemoglobin',
@@ -166,4 +159,30 @@ export const biochemicalEvaluationQuestions = [
         placeholder: 'Enter value',
         required: false
     }
+];
+
+const createSection = (prefix, sectionTitle, doneLabel) => [
+    {
+        id: `${prefix}_heading`,
+        type: 'heading',
+        label: sectionTitle
+    },
+    {
+        id: `${prefix}_done`,
+        label: doneLabel,
+        type: 'radio-group',
+        options: ['Yes', 'No'],
+        required: true
+    },
+    ...baseQuestions.map(q => ({
+        ...q,
+        id: `${prefix}_${q.id}`,
+        showIf: (data) => data[`${prefix}_done`] === 'Yes'
+    }))
+];
+
+export const biochemicalEvaluationQuestions = [
+    ...createSection('hosp', 'Biochemical Evaluation (At Hospitalization)', 'Biochemical Evaluations (At Hospitalization)'),
+    ...createSection('inter', 'Biochemical Evaluation (Intermediate)', 'Biochemical Evaluations (Intermediate)'),
+    ...createSection('disch', 'Biochemical Evaluation (Before Discharge)', 'Biochemical Evaluations (Before Discharge)')
 ];

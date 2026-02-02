@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
@@ -10,36 +10,66 @@ export const useAuth = () => {
     return context;
 };
 
-// Sample doctor credentials
-const SAMPLE_DOCTORS = [
-    { email: 'doctor@cancer-research.com', code: 'CR2024' },
-    { email: 'admin@cancer-research.com', code: 'ADMIN123' },
-];
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const login = (email, code) => {
-        const doctor = SAMPLE_DOCTORS.find(
-            (d) => d.email === email && d.code === code
-        );
-
-        if (doctor) {
-            setIsAuthenticated(true);
-            setCurrentUser({ email: doctor.email });
-            return true;
+    useEffect(() => {
+        const savedDoctor = localStorage.getItem('doctor');
+        if (savedDoctor) {
+            try {
+                const doctorData = JSON.parse(savedDoctor);
+                setIsAuthenticated(true);
+                setCurrentUser(doctorData);
+            } catch (e) {
+                localStorage.removeItem('doctor');
+            }
         }
-        return false;
+        setIsLoading(false);
+    }, []);
+
+    const login = async (email, passwordHash) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password_hash: passwordHash }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const doctorProfile = {
+                    id: data.doctor.id,
+                    name: data.doctor.name,
+                    email: data.doctor.email
+                };
+                setIsAuthenticated(true);
+                setCurrentUser(doctorProfile);
+                localStorage.setItem('doctor', JSON.stringify(doctorProfile));
+                return { success: true };
+            } else {
+                return { success: false, message: data.message || 'Invalid credentials' };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, message: 'Server connection failed' };
+        }
     };
 
     const logout = () => {
         setIsAuthenticated(false);
         setCurrentUser(null);
+        localStorage.removeItem('doctor');
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

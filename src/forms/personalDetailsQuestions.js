@@ -7,19 +7,6 @@ export const personalDetailsQuestions = [
         required: true
     },
     {
-        id: 'patientIdentifier',
-        label: 'Patient Identifier',
-        type: 'text',
-        placeholder: 'Enter Patient Identifier',
-        required: true
-    },
-    {
-        id: 'personalDetailsInfo',
-        label: 'Note',
-        type: 'info',
-        text: "Disclaimer: This data field is marked as personal and will be encrypted for privacy reasons, it's also ok if you share only initials for your further reference purposes."
-    },
-    {
         id: 'firstName',
         label: 'First Name',
         type: 'text',
@@ -34,12 +21,18 @@ export const personalDetailsQuestions = [
         required: false
     },
     {
+        id: 'personalDetailsInfo',
+        label: 'Note',
+        type: 'info',
+        text: "Disclaimer: This data field is marked as personal and will be encrypted for privacy reasons, it's also ok if you share only initials for your further reference purposes."
+    },
+    {
         id: 'dateOfBirth',
         label: 'Patient Date of Birth',
         type: 'date',
         placeholder: 'dd-MMM-yyyy',
         required: true,
-        info: 'Please Mention Patient Date of Birth'
+        // info: 'Please Mention Patient Date of Birth'
     },
     {
         id: 'chronologicalAge',

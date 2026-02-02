@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePatients } from '../context/PatientContext';
 import { personalDetailsQuestions } from '../forms/personalDetailsQuestions';
 import { healthDetailsQuestions } from '../forms/healthDetailsQuestions';
 import { backgroundDetailsQuestions } from '../forms/backgroundDetailsQuestions';
+import { nutritionInterventionQuestions } from '../forms/nutritionInterventionQuestions';
+import { anthropometricQuestions } from '../forms/anthropometricQuestions';
 import { biochemicalEvaluationQuestions } from '../forms/biochemicalEvaluationQuestions';
+import { nutritionMonitoringQuestions } from '../forms/nutritionMonitoringQuestions';
 
 const STEPS = [
-    { id: 1, name: 'Identification', section: 'personalDetails', questions: personalDetailsQuestions },
-    { id: 2, name: 'Health', section: 'healthDetails', questions: healthDetailsQuestions },
-    { id: 3, name: 'Background', section: 'backgroundDetails', questions: backgroundDetailsQuestions },
-    { id: 4, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions }
+    { id: 1, name: 'Personal', section: 'personalDetails', questions: personalDetailsQuestions },
+    { id: 2, name: 'History', section: 'healthDetails', questions: healthDetailsQuestions },
+    { id: 3, name: 'Assessment', section: 'backgroundDetails', questions: backgroundDetailsQuestions },
+    { id: 4, name: 'Intervention', section: 'nutritionIntervention', questions: nutritionInterventionQuestions },
+    { id: 5, name: 'Anthropometric', section: 'anthropometric', questions: anthropometricQuestions },
+    { id: 6, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions },
+    { id: 7, name: 'Monitoring', section: 'nutritionMonitoring', questions: nutritionMonitoringQuestions }
 ];
 
 function AddPatient() {
@@ -23,14 +29,71 @@ function AddPatient() {
     const [formData, setFormData] = useState(currentPatientForm[STEPS[0].section] || {});
     const [showReview, setShowReview] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
+    const [touchedFields, setTouchedFields] = useState({});
+
+    // Scroll to top on step change or review toggle
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentStep, showReview]);
 
     const currentStepData = STEPS.find(s => s.id === currentStep);
 
     const handleInputChange = (questionId, value) => {
-        setFormData(prev => ({
-            ...prev,
+        let updatedData = {
+            ...formData,
             [questionId]: value
-        }));
+        };
+
+        // Auto-calculate hospital stay length if discharge date or mortality status changes
+        if ((questionId === 'hospitalDischargeDate' && value) || (questionId === 'mortality' && value === 'Yes')) {
+            const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
+            const targetDateStr = questionId === 'hospitalDischargeDate' ? value : updatedData.dateOfDeath;
+
+            if (admissionDateStr && targetDateStr) {
+                const start = new Date(admissionDateStr);
+                const end = new Date(targetDateStr);
+                if (!isNaN(start) && !isNaN(end)) {
+                    const diffTime = Math.abs(end - start);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    updatedData.hospitalStayLength = diffDays;
+                }
+            } else if (questionId === 'mortality' && value === 'Yes') {
+                updatedData.hospitalStayLength = ''; // Reset if dying but no date yet
+            }
+        }
+
+        if (questionId === 'dateOfDeath' && value) {
+            const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
+            if (admissionDateStr) {
+                const start = new Date(admissionDateStr);
+                const end = new Date(value);
+                if (!isNaN(start) && !isNaN(end)) {
+                    const diffTime = Math.abs(end - start);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    updatedData.hospitalStayLength = diffDays;
+                }
+            }
+        }
+
+        // BMI calculation
+        if (questionId === 'height' || questionId === 'hosp_currentWeight' || questionId === 'inter_currentWeight' || questionId === 'disch_currentWeight') {
+            const height = questionId === 'height' ? value : updatedData.height;
+            const hospWeight = questionId === 'hosp_currentWeight' ? value : updatedData.hosp_currentWeight;
+            const interWeight = questionId === 'inter_currentWeight' ? value : updatedData.inter_currentWeight;
+            const dischWeight = questionId === 'disch_currentWeight' ? value : updatedData.disch_currentWeight;
+
+            if (height && height > 0) {
+                if (hospWeight) updatedData.hosp_bmi = (hospWeight / ((height / 100) * (height / 100))).toFixed(1);
+                if (interWeight) updatedData.inter_bmi = (interWeight / ((height / 100) * (height / 100))).toFixed(1);
+                if (dischWeight) updatedData.disch_bmi = (dischWeight / ((height / 100) * (height / 100))).toFixed(1);
+            }
+        }
+
+        setFormData(updatedData);
+        // Clear touched state when user types
+        if (touchedFields[questionId]) {
+            setTouchedFields(prev => ({ ...prev, [questionId]: false }));
+        }
     };
 
     const handleSave = () => {
@@ -39,12 +102,75 @@ function AddPatient() {
         setTimeout(() => setSaveMessage(''), 3000);
     };
 
+    const getMissingFields = (stepId) => {
+        const step = STEPS.find(s => s.id === stepId);
+        if (!step) return [];
+
+        const data = stepId === currentStep ? formData : (currentPatientForm[step.section] || {});
+
+        return step.questions
+            .filter(q => {
+                if (q.showIf) return q.showIf(data);
+                return true;
+            })
+            .filter(q => {
+                if (!q.required) return false;
+                const val = data[q.id];
+                if (q.type === 'age') {
+                    return !(val && (val.years || val.months || val.days));
+                }
+                if (q.type === 'checkbox-group') {
+                    return !(Array.isArray(val) && val.length > 0);
+                }
+                if (typeof val === 'string') return val.trim() === '';
+                if (q.type === 'number') return val === undefined || val === null || val === '';
+                if (q.type === 'dynamic-days') {
+                    const days = val || [{ energy: '', protein: '' }];
+                    return days.some(d => !d.energy || !d.protein);
+                }
+                return !val;
+            });
+    };
+
+    const validateStep = (id) => {
+        return getMissingFields(id).length === 0;
+    };
+
+    const canAccessStep = (targetStepId) => {
+        // We can always go to the first step or go backwards
+        if (targetStepId <= currentStep) return true;
+
+        // To go to targetStepId, all steps from 1 to targetStepId - 1 must be valid
+        for (let i = 1; i < targetStepId; i++) {
+            if (!validateStep(i)) return false;
+        }
+        return true;
+    };
+
     const handleNext = () => {
+        const missing = getMissingFields(currentStep);
+        if (missing.length > 0) {
+            // Mark all current fields as touched to show red highlights
+            const newTouched = {};
+            currentStepData.questions.forEach(q => newTouched[q.id] = true);
+            setTouchedFields(newTouched);
+
+            // Scroll to first invalid field
+            setTimeout(() => {
+                const element = document.getElementById(`field-group-${missing[0].id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+            return;
+        }
+
         saveFormProgress(currentStepData.section, formData);
         if (currentStep < STEPS.length) {
             const nextStep = currentStep + 1;
             setCurrentStep(nextStep);
             setFormData(currentPatientForm[STEPS[nextStep - 1].section] || {});
+            setTouchedFields({}); // Reset touched for next page
         }
     };
 
@@ -54,24 +180,35 @@ function AddPatient() {
             const prevStep = currentStep - 1;
             setCurrentStep(prevStep);
             setFormData(currentPatientForm[STEPS[prevStep - 1].section] || {});
+            setTouchedFields({});
         }
     };
 
     const handleStepClick = (stepId) => {
+        if (!canAccessStep(stepId)) {
+            return;
+        }
+
         saveFormProgress(currentStepData.section, formData);
         setCurrentStep(stepId);
         setFormData(currentPatientForm[STEPS[stepId - 1].section] || {});
+        setTouchedFields({});
     };
 
     const handleReview = () => {
+        // Save current step progress before showing review
         saveFormProgress(currentStepData.section, formData);
         setShowReview(true);
     };
 
-    const handleAddPatient = () => {
-        addPatient(currentPatientForm);
-        alert('Patient added successfully!');
-        navigate('/patients');
+    const handleAddPatient = async () => {
+        const result = await addPatient(currentPatientForm);
+        if (result.success) {
+            alert('Patient added successfully!');
+            navigate('/dashboard');
+        } else {
+            alert('Error adding patient: ' + (result.message || 'Unknown error'));
+        }
     };
 
     const handleLogout = () => {
@@ -81,6 +218,23 @@ function AddPatient() {
 
     const renderQuestion = (question) => {
         const value = formData[question.id] || '';
+
+        const renderImage = () => {
+            if (!question.image) return null;
+            return (
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    <img
+                        src={`/src/images/${question.image}`}
+                        alt={question.label}
+                        style={{ maxWidth: '100%', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                        }}
+                    />
+                </div>
+            );
+        };
 
         if (question.type === 'info') {
             return (
@@ -114,6 +268,7 @@ function AddPatient() {
                             className="form-input"
                             value={ageValue.years}
                             onChange={(e) => handleAgeChange('years', e.target.value)}
+                            onWheel={(e) => e.target.blur()}
                             placeholder="0"
                         />
                     </div>
@@ -124,6 +279,7 @@ function AddPatient() {
                             className="form-input"
                             value={ageValue.months}
                             onChange={(e) => handleAgeChange('months', e.target.value)}
+                            onWheel={(e) => e.target.blur()}
                             placeholder="0"
                         />
                     </div>
@@ -134,6 +290,7 @@ function AddPatient() {
                             className="form-input"
                             value={ageValue.days}
                             onChange={(e) => handleAgeChange('days', e.target.value)}
+                            onWheel={(e) => e.target.blur()}
                             placeholder="0"
                         />
                     </div>
@@ -143,18 +300,104 @@ function AddPatient() {
 
         if (question.type === 'select') {
             return (
-                <select
-                    id={question.id}
-                    className="form-select"
-                    value={value}
-                    onChange={(e) => handleInputChange(question.id, e.target.value)}
-                    required={question.required}
-                >
-                    <option value="">Select {question.label}</option>
+                <div>
+                    <select
+                        id={question.id}
+                        className="form-select"
+                        value={value}
+                        onChange={(e) => handleInputChange(question.id, e.target.value)}
+                        required={question.required}
+                    >
+                        <option value="">Select {question.label}</option>
+                        {(() => {
+                            const options = typeof question.options === 'function'
+                                ? question.options(formData)
+                                : question.options;
+
+                            if (question.groups) {
+                                return question.groups.map(group => (
+                                    <optgroup key={group.label} label={group.label}>
+                                        {group.options.map(option => (
+                                            <option key={option} value={option}>{option}</option>
+                                        ))}
+                                    </optgroup>
+                                ));
+                            }
+
+                            return options?.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ));
+                        })()}
+                    </select>
+                    {renderImage()}
+                </div>
+            );
+        }
+
+        if (question.type === 'checkbox-group') {
+            const selectedValues = Array.isArray(value) ? value : [];
+            const handleCheckboxChange = (optionValue) => {
+                const newValue = selectedValues.includes(optionValue)
+                    ? selectedValues.filter(v => v !== optionValue)
+                    : [...selectedValues, optionValue];
+                handleInputChange(question.id, newValue);
+            };
+
+            return (
+                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
                     {question.options.map(option => (
-                        <option key={option} value={option}>{option}</option>
+                        <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                            <input
+                                type="checkbox"
+                                checked={selectedValues.includes(option)}
+                                onChange={() => handleCheckboxChange(option)}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            />
+                            {option}
+                        </label>
                     ))}
-                </select>
+                </div>
+            );
+        }
+
+        if (question.type === 'radio-group') {
+            return (
+                <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
+                    {question.options.map(option => (
+                        <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                            <input
+                                type="radio"
+                                name={question.id}
+                                checked={value === option}
+                                onChange={() => handleInputChange(question.id, option)}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            />
+                            {option}
+                        </label>
+                    ))}
+                </div>
+            );
+        }
+
+        if (question.type === 'range') {
+            return (
+                <div style={{ paddingTop: '1rem' }}>
+                    <input
+                        type="range"
+                        id={question.id}
+                        min={question.min || 0}
+                        max={question.max || 100}
+                        step={question.step || 10}
+                        value={value || 0}
+                        onChange={(e) => handleInputChange(question.id, parseInt(e.target.value))}
+                        style={{ width: '100%', cursor: 'pointer', height: '6px', appearance: 'none', background: '#e2e8f0', borderRadius: '3px', outline: 'none' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        <span>{question.minLabel || question.min || 0}</span>
+                        <span style={{ fontWeight: '700', color: 'var(--primary-color)', fontSize: '1rem' }}>{value || 0}</span>
+                        <span>{question.maxLabel || question.max || 100}</span>
+                    </div>
+                </div>
             );
         }
 
@@ -171,6 +414,89 @@ function AddPatient() {
             );
         }
 
+        if (question.type === 'dynamic-days') {
+            const days = value || [{ energy: '', protein: '' }];
+            const updateDay = (index, field, val) => {
+                const newDays = [...days];
+                newDays[index] = { ...newDays[index], [field]: val };
+                handleInputChange(question.id, newDays);
+            };
+            const addDay = () => {
+                handleInputChange(question.id, [...days, { energy: '', protein: '' }]);
+            };
+            const removeDay = (index) => {
+                if (days.length > 1) {
+                    const newDays = days.filter((_, i) => i !== index);
+                    handleInputChange(question.id, newDays);
+                }
+            };
+
+            return (
+                <div style={{ display: 'grid', gap: '1.5rem' }}>
+                    {days.map((day, index) => (
+                        <div key={index} style={{
+                            padding: '1.25rem',
+                            background: 'rgba(59, 130, 246, 0.05)',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid #e2e8f0',
+                            position: 'relative'
+                        }}>
+                            <div style={{ fontWeight: '600', marginBottom: '1rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>Day {index + 1}</span>
+                                {index > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeDay(index)}
+                                        style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1.25rem' }}
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Total Energy Met (%)</label>
+                                    <select
+                                        className="form-select"
+                                        value={day.energy}
+                                        onChange={(e) => updateDay(index, 'energy', e.target.value)}
+                                    >
+                                        <option value="">Select %</option>
+                                        <option value="30%">30%</option>
+                                        <option value="50%">50%</option>
+                                        <option value="75%">75%</option>
+                                        <option value="100%">100%</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Total Protein Met (%)</label>
+                                    <select
+                                        className="form-select"
+                                        value={day.protein}
+                                        onChange={(e) => updateDay(index, 'protein', e.target.value)}
+                                    >
+                                        <option value="">Select %</option>
+                                        <option value="30%">30%</option>
+                                        <option value="50%">50%</option>
+                                        <option value="75%">75%</option>
+                                        <option value="100%">100%</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={addDay}
+                        className="btn btn-secondary"
+                        style={{ alignSelf: 'start', padding: '0.5rem 1rem' }}
+                    >
+                        + Add Another Day
+                    </button>
+                </div>
+            );
+        }
+
         return (
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
@@ -180,8 +506,10 @@ function AddPatient() {
                     placeholder={question.placeholder}
                     value={value}
                     onChange={(e) => handleInputChange(question.id, e.target.value)}
+                    onWheel={(e) => question.type === 'number' && e.target.blur()}
                     required={question.required}
-                    style={{ flex: 1 }}
+                    readOnly={question.readOnly}
+                    style={{ flex: 1, backgroundColor: question.readOnly ? '#f8fafc' : 'white' }}
                 />
                 {question.unit && (
                     <span style={{
@@ -215,15 +543,33 @@ function AddPatient() {
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {Object.entries(data)
                         .filter(([key]) => {
-                            if (section === 'miscellaneous' && key !== 'evaluationDone') {
-                                return data.evaluationDone === 'Yes';
-                            }
+                            const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...anthropometricQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions];
+                            const question = allQuestions.find(q => q.id === key);
+                            if (!question) return true;
+                            if (question.type === 'heading') return false;
+                            if (question.showIf) return question.showIf(data);
                             return true;
                         })
                         .map(([key, value]) => {
-                            const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...biochemicalEvaluationQuestions];
+                            const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...anthropometricQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions];
                             const question = allQuestions.find(q => q.id === key);
                             const unit = question?.unit ? ` ${question.unit}` : '';
+
+                            if (question?.type === 'dynamic-days' && Array.isArray(value)) {
+                                return (
+                                    <div key={key} style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+                                        <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{question.label}:</div>
+                                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                            {value.map((day, i) => (
+                                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                                                    <span style={{ fontSize: '0.85rem' }}>Day {i + 1}</span>
+                                                    <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            }
 
                             return (
                                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
@@ -255,16 +601,49 @@ function AddPatient() {
                             </button>
                         </div>
 
-                        {renderReviewSection('personalDetails', 'Patients Identification')}
-                        {renderReviewSection('healthDetails', 'Health Details')}
-                        {renderReviewSection('backgroundDetails', 'Background Details')}
+                        {renderReviewSection('personalDetails', 'Personal Details')}
+                        {renderReviewSection('healthDetails', 'Medical History')}
+                        {renderReviewSection('backgroundDetails', 'Dietetic Assessment')}
+                        {renderReviewSection('nutritionIntervention', 'Nutrition Interventional Plans')}
+                        {renderReviewSection('anthropometric', 'Anthropometric & Strength Evaluation')}
                         {renderReviewSection('miscellaneous', 'Biochemical Evaluation')}
+                        {renderReviewSection('nutritionMonitoring', 'Nutrition Monitoring')}
 
                         <div className="flex gap-2 mt-4">
-                            <button onClick={handleAddPatient} className="btn btn-success" style={{ flex: 1 }}>
-                                Add Patient
+                            <button
+                                onClick={() => {
+                                    // Final validation before actual adding
+                                    const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
+
+                                    if (!firstInvalidStep) {
+                                        handleAddPatient();
+                                    } else {
+                                        // Redirect to the first invalid step and show highlights
+                                        const missingFields = getMissingFields(firstInvalidStep.id);
+                                        setCurrentStep(firstInvalidStep.id);
+                                        setShowReview(false);
+                                        const stepData = currentPatientForm[firstInvalidStep.section] || {};
+                                        setFormData(stepData);
+
+                                        const newTouched = {};
+                                        firstInvalidStep.questions.forEach(q => newTouched[q.id] = true);
+                                        setTouchedFields(newTouched);
+
+                                        // Scroll after render
+                                        setTimeout(() => {
+                                            const element = document.getElementById(`field-group-${missingFields[0].id}`);
+                                            if (element) {
+                                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }
+                                        }, 100);
+                                    }
+                                }}
+                                className="btn btn-success"
+                                style={{ flex: 1 }}
+                            >
+                                ✓ Finalize & Add Patient
                             </button>
-                            <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
+                            <button onClick={() => setShowReview(false)} className="btn btn-secondary">
                                 Cancel
                             </button>
                         </div>
@@ -283,16 +662,26 @@ function AddPatient() {
 
                 {/* Progress Stepper */}
                 <div className="progress-stepper">
-                    {STEPS.map((step) => (
-                        <div
-                            key={step.id}
-                            className={`step ${currentStep === step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}
-                            onClick={() => handleStepClick(step.id)}
-                        >
-                            <div className="step-circle">{step.id}</div>
-                            <div className="step-label">{step.name}</div>
-                        </div>
-                    ))}
+                    {STEPS.map((step) => {
+                        const isCurrent = step.id === currentStep;
+                        const isCompleted = currentStep > step.id;
+                        const isAccessible = canAccessStep(step.id);
+
+                        return (
+                            <div
+                                key={step.id}
+                                className={`step ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                                onClick={() => isAccessible && handleStepClick(step.id)}
+                                style={{
+                                    opacity: isAccessible ? 1 : 0.5,
+                                    cursor: isAccessible ? 'pointer' : 'not-allowed'
+                                }}
+                            >
+                                <div className="step-circle">{step.id}</div>
+                                <div className="step-label">{step.name}</div>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Save Message */}
@@ -313,25 +702,67 @@ function AddPatient() {
                 {/* Form */}
                 <div className="glass-card">
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                        {currentStep === 1 ? 'Patients Identification' : currentStep === 4 ? 'Biochemical Evaluation' : `${currentStepData.name} Details`}
+                        {currentStep === 1 ? 'Personal Details' :
+                            currentStep === 2 ? 'Medical History' :
+                                currentStep === 3 ? 'Dietetic Assessment' :
+                                    currentStep === 4 ? 'Nutrition Interventional Plans' :
+                                        currentStep === 5 ? 'Anthropometric & Strength Evaluation' :
+                                            currentStep === 6 ? 'Biochemical Evaluation' :
+                                                currentStep === 7 ? 'Nutrition Monitoring' :
+                                                    `${currentStepData.name} Details`}
                     </h2>
 
                     <form>
                         {currentStepData.questions
                             .filter(q => {
-                                if (currentStep === 4 && q.id !== 'evaluationDone') {
-                                    return formData.evaluationDone === 'Yes';
+                                if (q.showIf) {
+                                    return q.showIf(formData);
                                 }
                                 return true;
                             })
-                            .map((question) => (
-                                <div key={question.id} className="form-group">
-                                    <label htmlFor={question.id} className="form-label">
-                                        {question.label} {question.required && <span style={{ color: 'var(--danger-color)' }}>*</span>}
-                                    </label>
-                                    {renderQuestion(question)}
-                                </div>
-                            ))}
+                            .map((question) => {
+                                if (question.type === 'heading') {
+                                    return (
+                                        <h3 key={question.id} style={{
+                                            fontSize: '1.25rem',
+                                            fontWeight: '700',
+                                            marginTop: '2rem',
+                                            marginBottom: '1rem',
+                                            color: 'var(--text-primary)',
+                                            borderBottom: '1px solid #e2e8f0',
+                                            paddingBottom: '0.5rem'
+                                        }}>
+                                            {question.label}
+                                        </h3>
+                                    );
+                                }
+
+                                const isMissing = question.required && (
+                                    question.type === 'age'
+                                        ? !(formData[question.id] && (formData[question.id].years || formData[question.id].months || formData[question.id].days))
+                                        : question.type === 'checkbox-group'
+                                            ? !(Array.isArray(formData[question.id]) && formData[question.id].length > 0)
+                                            : !formData[question.id] || (typeof formData[question.id] === 'string' && formData[question.id].trim() === '')
+                                );
+                                const showError = touchedFields[question.id] && isMissing;
+
+                                return (
+                                    <div
+                                        key={question.id}
+                                        id={`field-group-${question.id}`}
+                                        className="form-group"
+                                        style={showError ? { borderLeft: '3px solid var(--danger-color)', paddingLeft: '1rem', marginLeft: '-1.25rem', transition: 'all 0.3s ease' } : {}}
+                                    >
+                                        <label htmlFor={question.id} className="form-label" style={showError ? { color: 'var(--danger-color)' } : {}}>
+                                            {question.label} {question.required && <span style={{ color: 'var(--danger-color)' }}>*</span>}
+                                        </label>
+                                        <div className={showError ? 'field-error' : ''}>
+                                            {renderQuestion(question)}
+                                        </div>
+                                        {showError && <p style={{ color: 'var(--danger-color)', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: '500' }}>This field is mandatory</p>}
+                                    </div>
+                                );
+                            })}
                     </form>
 
                     {/* Action Buttons */}
@@ -349,11 +780,35 @@ function AddPatient() {
                             </button>
                         )}
                         {currentStep < STEPS.length ? (
-                            <button onClick={handleNext} className="btn btn-primary">
+                            <button
+                                onClick={handleNext}
+                                className="btn btn-primary"
+                            >
                                 Next →
                             </button>
                         ) : (
-                            <button onClick={handleAddPatient} className="btn btn-success">
+                            <button
+                                onClick={() => {
+                                    const missing = getMissingFields(currentStep);
+                                    if (missing.length > 0) {
+                                        const newTouched = {};
+                                        currentStepData.questions.forEach(q => newTouched[q.id] = true);
+                                        setTouchedFields(newTouched);
+
+                                        // Scroll to first invalid field
+                                        setTimeout(() => {
+                                            const element = document.getElementById(`field-group-${missing[0].id}`);
+                                            if (element) {
+                                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }
+                                        }, 100);
+                                        return;
+                                    }
+                                    saveFormProgress(currentStepData.section, formData);
+                                    handleAddPatient();
+                                }}
+                                className="btn btn-success"
+                            >
                                 ✓ Add Patient
                             </button>
                         )}

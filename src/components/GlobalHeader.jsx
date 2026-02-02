@@ -55,17 +55,14 @@ const GlobalHeader = () => {
                 {/* Middle: Centered Image */}
                 <div style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
                     <div style={{
-                        background: '#ffffff',
                         padding: '6px',
                         borderRadius: '16px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        border: "1px solid #f1f5f9"
                     }}>
                         <img
                             src="/cancer-research-thumbnail.jpg"
                             alt="Cancer Research Portal"
                             style={{
-                                height: '130px',
+                                height: '110px',
                                 maxWidth: '100%',
                                 objectFit: 'contain',
                                 display: 'block',

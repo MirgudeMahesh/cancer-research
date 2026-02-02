@@ -51,7 +51,7 @@ function Dashboard() {
                             Add Patient
                         </h2>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                            Register a new patient and fill out their medical information
+                            Register a new patient 
                         </p>
                         <button className="btn btn-primary">
                             Get Started

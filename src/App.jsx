@@ -8,7 +8,19 @@ import { PatientProvider } from './context/PatientContext';
 import GlobalHeader from './components/GlobalHeader';
 
 function PrivateRoute({ children }) {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+        return (
+            <div className="flex-center" style={{ height: '100vh', background: 'var(--bg-primary)' }}>
+                <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                    <div className="loader mb-3"></div>
+                    <p style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Validating session...</p>
+                </div>
+            </div>
+        );
+    }
+
     return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
