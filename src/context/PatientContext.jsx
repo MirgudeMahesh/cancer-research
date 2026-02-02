@@ -11,7 +11,7 @@ export const usePatients = () => {
     return context;
 };
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://cancer-research-backend-1.onrender.com/api';
 
 export const PatientProvider = ({ children }) => {
     const { currentUser } = useAuth();
