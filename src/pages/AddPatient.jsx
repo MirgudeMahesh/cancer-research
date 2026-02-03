@@ -30,6 +30,7 @@ function AddPatient() {
     const [showReview, setShowReview] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
     const [touchedFields, setTouchedFields] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Scroll to top on step change or review toggle
     useEffect(() => {
@@ -206,12 +207,20 @@ function AddPatient() {
     };
 
     const handleAddPatient = async (finalData = currentPatientForm) => {
-        const result = await addPatient(finalData);
-        if (result.success) {
-            alert(finalData.id ? 'Patient updated successfully!' : 'Patient added successfully!');
-            navigate('/dashboard');
-        } else {
-            alert('Error adding/updating patient: ' + (result.message || 'Unknown error'));
+        setIsSubmitting(true);
+        try {
+            const result = await addPatient(finalData);
+            if (result.success) {
+                alert(finalData.id ? 'Patient updated successfully!' : 'Patient added successfully!');
+                navigate('/dashboard');
+            } else {
+                alert('Error adding/updating patient: ' + (result.message || 'Unknown error'));
+                setIsSubmitting(false);
+            }
+        } catch (error) {
+            console.error('Error in handleAddPatient:', error);
+            alert('An unexpected error occurred.');
+            setIsSubmitting(false);
         }
     };
 
@@ -617,6 +626,7 @@ function AddPatient() {
                         <div className="flex gap-2 mt-4">
                             <button
                                 onClick={() => {
+                                    if (isSubmitting) return;
                                     // Final validation before actual adding
                                     const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
 
@@ -645,9 +655,10 @@ function AddPatient() {
                                     }
                                 }}
                                 className="btn btn-success"
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
+                                disabled={isSubmitting}
                             >
-                                ✓ Finalize & Add Patient
+                                {isSubmitting ? '⌛ Processing...' : '✓ Finalize & Add Patient'}
                             </button>
                             <button onClick={() => setShowReview(false)} className="btn btn-secondary">
                                 Cancel
@@ -780,24 +791,35 @@ function AddPatient() {
                             </button>
                             <button
                                 onClick={async () => {
-                                    saveFormProgress(currentStepData.section, formData);
-                                    // We need to pass the updated form data because saveFormProgress is async-ish (state update)
-                                    const updatedForm = {
-                                        ...currentPatientForm,
-                                        data: { ...currentPatientForm.data, ...formData },
-                                        [currentStepData.section]: formData
-                                    };
-                                    const result = await addPatient(updatedForm, 'pending');
-                                    if (result.success) {
-                                        alert('Patient draft saved! You can complete it later.');
-                                        navigate('/dashboard');
-                                    } else {
-                                        alert('Error saving draft: ' + result.message);
+                                    if (isSubmitting) return;
+                                    setIsSubmitting(true);
+                                    try {
+                                        saveFormProgress(currentStepData.section, formData);
+                                        // We need to pass the updated form data because saveFormProgress is async-ish (state update)
+                                        const updatedForm = {
+                                            ...currentPatientForm,
+                                            data: { ...currentPatientForm.data, ...formData },
+                                            [currentStepData.section]: formData
+                                        };
+                                        const result = await addPatient(updatedForm, 'pending');
+                                        if (result.success) {
+                                            alert('Patient draft saved! You can complete it later.');
+                                            navigate('/dashboard');
+                                        } else {
+                                            alert('Error saving draft: ' + result.message);
+                                            setIsSubmitting(false);
+                                        }
+                                    } catch (error) {
+                                        console.error('Error saving draft:', error);
+                                        alert('An unexpected error occurred while saving draft.');
+                                        setIsSubmitting(false);
                                     }
                                 }}
-                                className="btn btn-warning"
+                                className={`btn btn-warning ${isSubmitting ? 'disabled' : ''}`}
+                                disabled={isSubmitting}
+                                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
                             >
-                                📝 Save Draft
+                                {isSubmitting ? '⌛ Saving...' : '📝 Save Draft'}
                             </button>
 
 
