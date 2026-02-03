@@ -104,9 +104,14 @@ function AddPatient() {
     };
 
     const handleSave = () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         saveFormProgress(currentStepData.section, formData);
         setSaveMessage('Progress saved successfully!');
-        setTimeout(() => setSaveMessage(''), 3000);
+        setTimeout(() => {
+            setSaveMessage('');
+            setIsSubmitting(false);
+        }, 2000);
     };
 
     const getMissingFields = (stepId) => {
@@ -786,8 +791,13 @@ function AddPatient() {
                     {/* Action Buttons */}
                     <div className="flex gap-2 mt-4" style={{ flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div className="flex gap-2">
-                            <button onClick={handleSave} className="btn btn-secondary">
-                                💾 Save Progress
+                            <button
+                                onClick={handleSave}
+                                className="btn btn-secondary"
+                                disabled={isSubmitting}
+                                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
+                            >
+                                {isSubmitting && saveMessage ? '⌛ Saving...' : '💾 Save Progress'}
                             </button>
                             <button
                                 onClick={async () => {
