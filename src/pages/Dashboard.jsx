@@ -75,7 +75,7 @@ function Dashboard() {
                             disabled={submittingAction !== null}
                             style={{ cursor: submittingAction ? 'not-allowed' : 'pointer' }}
                         >
-                            {submittingAction === 'add' ? '⌛ Loading...' : 'Get Started'}
+                            {submittingAction === 'add' ? '⌛ Adding...' : 'Get Started'}
                         </button>
                     </div>
 

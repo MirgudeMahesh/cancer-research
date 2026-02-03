@@ -26,7 +26,7 @@ function AddPatient() {
     const { currentPatientForm, saveFormProgress, addPatient, resetForm } = usePatients();
 
     const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState(currentPatientForm[STEPS[0].section] || {});
+    const [formData, setFormData] = useState(currentPatientForm.data || {});
     const [showReview, setShowReview] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
     const [touchedFields, setTouchedFields] = useState({});
@@ -37,11 +37,10 @@ function AddPatient() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentStep, showReview]);
 
-    // Sync local formData with context state when step changes or context updates (resuming)
+    // Sync local formData with context state when context updates (resuming or global sync)
     useEffect(() => {
-        const sectionData = currentPatientForm[STEPS[currentStep - 1].section] || {};
-        setFormData(sectionData);
-    }, [currentStep, currentPatientForm]);
+        setFormData(currentPatientForm.data || {});
+    }, [currentPatientForm.data]);
 
     const currentStepData = STEPS.find(s => s.id === currentStep);
 
@@ -550,9 +549,13 @@ function AddPatient() {
         );
     };
 
-    const renderReviewSection = (section, title) => {
-        const data = currentPatientForm[section];
-        if (!data || Object.keys(data).length === 0) return null;
+    const renderReviewSection = (sectionKey, title) => {
+        const step = STEPS.find(s => s.section === sectionKey);
+        const data = currentPatientForm.data;
+        if (!step || !data || Object.keys(data).length === 0) return null;
+
+        const sectionQuestions = step.questions;
+        const sectionFields = data;
 
         return (
             <div className="mb-4">
@@ -560,21 +563,18 @@ function AddPatient() {
                     {title}
                 </h3>
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    {Object.entries(data)
-                        .filter(([key]) => {
-                            const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...anthropometricQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions];
-                            const question = allQuestions.find(q => q.id === key);
-                            if (!question) return true;
-                            if (question.type === 'heading') return false;
-                            if (question.showIf) return question.showIf(data);
-                            return true;
+                    {sectionQuestions
+                        .filter(q => {
+                            if (q.type === 'heading') return false;
+                            if (q.showIf) return q.showIf(data);
+                            return data[q.id] !== undefined && data[q.id] !== null && data[q.id] !== '';
                         })
-                        .map(([key, value]) => {
-                            const allQuestions = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...anthropometricQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions];
-                            const question = allQuestions.find(q => q.id === key);
-                            const unit = question?.unit ? ` ${question.unit}` : '';
+                        .map((question) => {
+                            const key = question.id;
+                            const value = data[key];
+                            const unit = question.unit ? ` ${question.unit}` : '';
 
-                            if (question?.type === 'dynamic-days' && Array.isArray(value)) {
+                            if (question.type === 'dynamic-days' && Array.isArray(value)) {
                                 return (
                                     <div key={key} style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
                                         <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{question.label}:</div>
@@ -593,7 +593,7 @@ function AddPatient() {
                             return (
                                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
                                     <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-                                        {question?.label || key.replace(/([A-Z])/g, ' $1').trim()}:
+                                        {question.label}:
                                     </span>
                                     <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
                                         {typeof value === 'object' && value !== null
@@ -643,8 +643,7 @@ function AddPatient() {
                                         const missingFields = getMissingFields(firstInvalidStep.id);
                                         setCurrentStep(firstInvalidStep.id);
                                         setShowReview(false);
-                                        const stepData = currentPatientForm[firstInvalidStep.section] || {};
-                                        setFormData(stepData);
+                                        // formData is automatically synced with currentPatientForm.data via useEffect
 
                                         const newTouched = {};
                                         firstInvalidStep.questions.forEach(q => newTouched[q.id] = true);
@@ -663,7 +662,7 @@ function AddPatient() {
                                 style={{ flex: 1, cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                                 disabled={submittingAction !== null}
                             >
-                                {submittingAction === 'add' ? '⌛ Processing...' : '✓ Finalize & Add Patient'}
+                                {submittingAction === 'add' ? '⌛ Adding...' : '✓ Finalize & Add Patient'}
                             </button>
                             <button onClick={() => setShowReview(false)} className="btn btn-secondary">
                                 Cancel
