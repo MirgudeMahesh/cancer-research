@@ -7,7 +7,7 @@ function Dashboard() {
     const navigate = useNavigate();
     const { currentUser, logout } = useAuth();
     const { resetForm } = usePatients();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submittingAction, setSubmittingAction] = useState(null); // 'add' or 'view'
 
     const handleLogout = () => {
         logout();
@@ -15,15 +15,15 @@ function Dashboard() {
     };
 
     const handleAddPatientClick = () => {
-        if (isSubmitting) return;
-        setIsSubmitting(true);
+        if (submittingAction) return;
+        setSubmittingAction('add');
         resetForm();
         navigate('/add-patient');
     };
 
     const handleViewPatientsClick = () => {
-        if (isSubmitting) return;
-        setIsSubmitting(true);
+        if (submittingAction) return;
+        setSubmittingAction('view');
         navigate('/patients');
     };
 
@@ -47,7 +47,7 @@ function Dashboard() {
                 <div className="card-grid" style={{ maxWidth: '960px', margin: '0 auto 3rem' }}>
                     <div
                         className="glass-card"
-                        style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '3rem 2rem', opacity: isSubmitting ? 0.8 : 1 }}
+                        style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '3rem 2rem', opacity: submittingAction ? 0.8 : 1 }}
                         onClick={handleAddPatientClick}
                     >
                         <div
@@ -72,16 +72,16 @@ function Dashboard() {
                         <button
                             onClick={(e) => { e.stopPropagation(); handleAddPatientClick(); }}
                             className="btn btn-primary"
-                            disabled={isSubmitting}
-                            style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                            disabled={submittingAction !== null}
+                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer' }}
                         >
-                            {isSubmitting ? '⌛ Loading...' : 'Get Started'}
+                            {submittingAction === 'add' ? '⌛ Loading...' : 'Get Started'}
                         </button>
                     </div>
 
                     <div
                         className="glass-card"
-                        style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '3rem 2rem', opacity: isSubmitting ? 0.8 : 1 }}
+                        style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', textAlign: 'center', padding: '3rem 2rem', opacity: submittingAction ? 0.8 : 1 }}
                         onClick={handleViewPatientsClick}
                     >
                         <div
@@ -106,10 +106,10 @@ function Dashboard() {
                         <button
                             onClick={(e) => { e.stopPropagation(); handleViewPatientsClick(); }}
                             className="btn btn-success"
-                            disabled={isSubmitting}
-                            style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                            disabled={submittingAction !== null}
+                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer' }}
                         >
-                            {isSubmitting ? '⌛ Loading...' : 'View Patients'}
+                            {submittingAction === 'view' ? '⌛ Loading...' : 'View Patients'}
                         </button>
                     </div>
                 </div>

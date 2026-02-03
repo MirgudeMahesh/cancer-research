@@ -30,7 +30,7 @@ function AddPatient() {
     const [showReview, setShowReview] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
     const [touchedFields, setTouchedFields] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submittingAction, setSubmittingAction] = useState(null); // 'save', 'draft', or 'add'
 
     // Scroll to top on step change or review toggle
     useEffect(() => {
@@ -104,13 +104,13 @@ function AddPatient() {
     };
 
     const handleSave = () => {
-        if (isSubmitting) return;
-        setIsSubmitting(true);
+        if (submittingAction) return;
+        setSubmittingAction('save');
         saveFormProgress(currentStepData.section, formData);
         setSaveMessage('Progress saved successfully!');
         setTimeout(() => {
             setSaveMessage('');
-            setIsSubmitting(false);
+            setSubmittingAction(null);
         }, 2000);
     };
 
@@ -212,7 +212,7 @@ function AddPatient() {
     };
 
     const handleAddPatient = async (finalData = currentPatientForm) => {
-        setIsSubmitting(true);
+        setSubmittingAction('add');
         try {
             const result = await addPatient(finalData);
             if (result.success) {
@@ -220,12 +220,12 @@ function AddPatient() {
                 navigate('/dashboard');
             } else {
                 alert('Error adding/updating patient: ' + (result.message || 'Unknown error'));
-                setIsSubmitting(false);
+                setSubmittingAction(null);
             }
         } catch (error) {
             console.error('Error in handleAddPatient:', error);
             alert('An unexpected error occurred.');
-            setIsSubmitting(false);
+            setSubmittingAction(null);
         }
     };
 
@@ -631,7 +631,7 @@ function AddPatient() {
                         <div className="flex gap-2 mt-4">
                             <button
                                 onClick={() => {
-                                    if (isSubmitting) return;
+                                    if (submittingAction) return;
                                     // Final validation before actual adding
                                     const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
 
@@ -660,10 +660,10 @@ function AddPatient() {
                                     }
                                 }}
                                 className="btn btn-success"
-                                style={{ flex: 1, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
-                                disabled={isSubmitting}
+                                style={{ flex: 1, cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
+                                disabled={submittingAction !== null}
                             >
-                                {isSubmitting ? '⌛ Processing...' : '✓ Finalize & Add Patient'}
+                                {submittingAction === 'add' ? '⌛ Processing...' : '✓ Finalize & Add Patient'}
                             </button>
                             <button onClick={() => setShowReview(false)} className="btn btn-secondary">
                                 Cancel
@@ -794,15 +794,15 @@ function AddPatient() {
                             <button
                                 onClick={handleSave}
                                 className="btn btn-secondary"
-                                disabled={isSubmitting}
-                                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
+                                disabled={submittingAction !== null}
+                                style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                             >
-                                {isSubmitting && saveMessage ? '⌛ Saving...' : '💾 Save Progress'}
+                                {submittingAction === 'save' ? '⌛ Saving...' : '💾 Save Progress'}
                             </button>
                             <button
                                 onClick={async () => {
-                                    if (isSubmitting) return;
-                                    setIsSubmitting(true);
+                                    if (submittingAction) return;
+                                    setSubmittingAction('draft');
                                     try {
                                         saveFormProgress(currentStepData.section, formData);
                                         // We need to pass the updated form data because saveFormProgress is async-ish (state update)
@@ -817,19 +817,19 @@ function AddPatient() {
                                             navigate('/dashboard');
                                         } else {
                                             alert('Error saving draft: ' + result.message);
-                                            setIsSubmitting(false);
+                                            setSubmittingAction(null);
                                         }
                                     } catch (error) {
                                         console.error('Error saving draft:', error);
                                         alert('An unexpected error occurred while saving draft.');
-                                        setIsSubmitting(false);
+                                        setSubmittingAction(null);
                                     }
                                 }}
-                                className={`btn btn-warning ${isSubmitting ? 'disabled' : ''}`}
-                                disabled={isSubmitting}
-                                style={{ cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
+                                className={`btn btn-warning ${submittingAction ? 'disabled' : ''}`}
+                                disabled={submittingAction !== null}
+                                style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                             >
-                                {isSubmitting ? '⌛ Saving...' : '📝 Save Draft'}
+                                {submittingAction === 'draft' ? '⌛ Saving...' : '📝 Save Draft'}
                             </button>
 
 
