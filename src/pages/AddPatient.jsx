@@ -36,6 +36,12 @@ function AddPatient() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentStep, showReview]);
 
+    // Sync local formData with context state when step changes or context updates (resuming)
+    useEffect(() => {
+        const sectionData = currentPatientForm[STEPS[currentStep - 1].section] || {};
+        setFormData(sectionData);
+    }, [currentStep, currentPatientForm]);
+
     const currentStepData = STEPS.find(s => s.id === currentStep);
 
     const handleInputChange = (questionId, value) => {
@@ -167,22 +173,20 @@ function AddPatient() {
 
         saveFormProgress(currentStepData.section, formData);
         if (currentStep < STEPS.length) {
-            const nextStep = currentStep + 1;
-            setCurrentStep(nextStep);
-            setFormData(currentPatientForm[STEPS[nextStep - 1].section] || {});
+            setCurrentStep(prev => prev + 1);
             setTouchedFields({}); // Reset touched for next page
         }
     };
 
+
     const handlePrevious = () => {
         saveFormProgress(currentStepData.section, formData);
         if (currentStep > 1) {
-            const prevStep = currentStep - 1;
-            setCurrentStep(prevStep);
-            setFormData(currentPatientForm[STEPS[prevStep - 1].section] || {});
+            setCurrentStep(prev => prev - 1);
             setTouchedFields({});
         }
     };
+
 
     const handleStepClick = (stepId) => {
         if (!canAccessStep(stepId)) {
@@ -191,9 +195,9 @@ function AddPatient() {
 
         saveFormProgress(currentStepData.section, formData);
         setCurrentStep(stepId);
-        setFormData(currentPatientForm[STEPS[stepId - 1].section] || {});
         setTouchedFields({});
     };
+
 
     const handleReview = () => {
         // Save current step progress before showing review
@@ -201,15 +205,16 @@ function AddPatient() {
         setShowReview(true);
     };
 
-    const handleAddPatient = async () => {
-        const result = await addPatient(currentPatientForm);
+    const handleAddPatient = async (finalData = currentPatientForm) => {
+        const result = await addPatient(finalData);
         if (result.success) {
-            alert('Patient added successfully!');
+            alert(finalData.id ? 'Patient updated successfully!' : 'Patient added successfully!');
             navigate('/dashboard');
         } else {
-            alert('Error adding patient: ' + (result.message || 'Unknown error'));
+            alert('Error adding/updating patient: ' + (result.message || 'Unknown error'));
         }
     };
+
 
     const handleLogout = () => {
         logout();
@@ -616,8 +621,9 @@ function AddPatient() {
                                     const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
 
                                     if (!firstInvalidStep) {
-                                        handleAddPatient();
+                                        handleAddPatient(currentPatientForm);
                                     } else {
+
                                         // Redirect to the first invalid step and show highlights
                                         const missingFields = getMissingFields(firstInvalidStep.id);
                                         setCurrentStep(firstInvalidStep.id);
@@ -657,8 +663,9 @@ function AddPatient() {
         <div>
             <div className="container" style={{ paddingTop: '2rem', maxWidth: '900px' }}>
                 <h1 className="text-center mb-4" style={{ fontSize: '2rem', fontWeight: '700' }}>
-                    Add New Patient
+                    {currentPatientForm.id ? 'Resume Patient Documentation' : 'Add New Patient'}
                 </h1>
+
 
                 {/* Progress Stepper */}
                 <div className="progress-stepper">
@@ -766,52 +773,87 @@ function AddPatient() {
                     </form>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 mt-4" style={{ flexWrap: 'wrap' }}>
-                        <button onClick={handleSave} className="btn btn-secondary">
-                            💾 Save Progress
-                        </button>
-                        <button onClick={handleReview} className="btn btn-secondary">
-                            👁️ Review All
-                        </button>
-                        <div style={{ flex: 1 }}></div>
-                        {currentStep > 1 && (
-                            <button onClick={handlePrevious} className="btn btn-secondary">
-                                ← Previous
+                    <div className="flex gap-2 mt-4" style={{ flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="flex gap-2">
+                            <button onClick={handleSave} className="btn btn-secondary">
+                                💾 Save Progress
                             </button>
-                        )}
-                        {currentStep < STEPS.length ? (
                             <button
-                                onClick={handleNext}
-                                className="btn btn-primary"
-                            >
-                                Next →
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => {
-                                    const missing = getMissingFields(currentStep);
-                                    if (missing.length > 0) {
-                                        const newTouched = {};
-                                        currentStepData.questions.forEach(q => newTouched[q.id] = true);
-                                        setTouchedFields(newTouched);
-
-                                        // Scroll to first invalid field
-                                        setTimeout(() => {
-                                            const element = document.getElementById(`field-group-${missing[0].id}`);
-                                            if (element) {
-                                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            }
-                                        }, 100);
-                                        return;
-                                    }
+                                onClick={async () => {
                                     saveFormProgress(currentStepData.section, formData);
-                                    handleAddPatient();
+                                    // We need to pass the updated form data because saveFormProgress is async-ish (state update)
+                                    const updatedForm = {
+                                        ...currentPatientForm,
+                                        data: { ...currentPatientForm.data, ...formData },
+                                        [currentStepData.section]: formData
+                                    };
+                                    const result = await addPatient(updatedForm, 'pending');
+                                    if (result.success) {
+                                        alert('Patient draft saved! You can complete it later.');
+                                        navigate('/dashboard');
+                                    } else {
+                                        alert('Error saving draft: ' + result.message);
+                                    }
                                 }}
-                                className="btn btn-success"
+                                className="btn btn-warning"
                             >
-                                ✓ Add Patient
+                                📝 Save Draft
                             </button>
-                        )}
+
+
+
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button onClick={handleReview} className="btn btn-secondary">
+                                👁️ Review All
+                            </button>
+                            {currentStep > 1 && (
+                                <button onClick={handlePrevious} className="btn btn-secondary">
+                                    ← Previous
+                                </button>
+                            )}
+                            {currentStep < STEPS.length ? (
+                                <button
+                                    onClick={handleNext}
+                                    className="btn btn-primary"
+                                >
+                                    Next →
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => {
+
+                                        const missing = getMissingFields(currentStep);
+                                        if (missing.length > 0) {
+                                            const newTouched = {};
+                                            currentStepData.questions.forEach(q => newTouched[q.id] = true);
+                                            setTouchedFields(newTouched);
+
+                                            // Scroll to first invalid field
+                                            setTimeout(() => {
+                                                const element = document.getElementById(`field-group-${missing[0].id}`);
+                                                if (element) {
+                                                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                }
+                                            }, 100);
+                                            return;
+                                        }
+                                        saveFormProgress(currentStepData.section, formData);
+                                        const finalData = {
+                                            ...currentPatientForm,
+                                            data: { ...currentPatientForm.data, ...formData },
+                                            [currentStepData.section]: formData
+                                        };
+                                        handleAddPatient(finalData);
+
+                                    }}
+                                    className="btn btn-success"
+                                >
+                                    ✓ Add Patient
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

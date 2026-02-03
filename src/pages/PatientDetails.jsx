@@ -13,7 +13,9 @@ import { nutritionMonitoringQuestions } from '../forms/nutritionMonitoringQuesti
 function PatientDetails() {
     const navigate = useNavigate();
     const { logout } = useAuth();
-    const { patients, updatePatient } = usePatients();
+    const { patients, editPatient } = usePatients();
+
+    const [activeTab, setActiveTab] = useState('completed');
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -26,10 +28,19 @@ function PatientDetails() {
     };
 
     const filteredPatients = patients.filter(patient => {
-        const identifier = (patient.patient_identifier || '').toLowerCase();
+        const identifier = (patient.patientId || '').toLowerCase();
         const idString = (patient.id || '').toString();
-        return identifier.includes(searchTerm.toLowerCase()) || idString.includes(searchTerm);
+        const matchesSearch = identifier.includes(searchTerm.toLowerCase()) || idString.includes(searchTerm);
+
+        const patientStatus = (patient.status || 'completed').toLowerCase();
+        return matchesSearch && (patientStatus === activeTab);
     });
+
+    const handleResumePatient = (patient) => {
+        editPatient(patient);
+        navigate('/add-patient');
+    };
+
 
     const handleViewPatient = (patient) => {
         setSelectedPatient(patient);
@@ -142,17 +153,52 @@ function PatientDetails() {
 
                 {!selectedPatient ? (
                     <>
+                        {/* Tabs */}
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+                            <button
+                                onClick={() => setActiveTab('completed')}
+                                style={{
+                                    padding: '0.5rem 1.5rem',
+                                    border: 'none',
+                                    background: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'completed' ? '700' : '400',
+                                    color: activeTab === 'completed' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                                    borderBottom: activeTab === 'completed' ? '3px solid var(--primary-color)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Completed
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('pending')}
+                                style={{
+                                    padding: '0.5rem 1.5rem',
+                                    border: 'none',
+                                    background: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'pending' ? '700' : '400',
+                                    color: activeTab === 'pending' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                                    borderBottom: activeTab === 'pending' ? '3px solid var(--primary-color)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Drafts ({patients.filter(p => (p.status || 'completed') === 'pending').length})
+                            </button>
+                        </div>
+
                         {/* Search Bar */}
                         <div className="search-bar">
                             <span className="search-icon">🔍</span>
                             <input
                                 type="text"
                                 className="search-input"
-                                placeholder="Search by identifier or ID..."
+                                placeholder={`Search ${activeTab} patients...`}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+
 
                         {/* Patient Table */}
                         <div className="table-container">
@@ -163,8 +209,9 @@ function PatientDetails() {
                                         <th>Identifier</th>
                                         <th>Created At</th>
                                         <th>Gender</th>
-                                        <th>Condition</th>
+                                        {activeTab === 'completed' && <th>Condition</th>}
                                         <th>Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -172,32 +219,46 @@ function PatientDetails() {
                                         filteredPatients.map((patient) => (
                                             <tr key={patient.id}>
                                                 <td style={{ fontSize: '0.8rem' }}>{patient.id}</td>
-                                                <td>{patient.patient_identifier || 'N/A'}</td>
+                                                <td>{patient.patientId || 'N/A'}</td>
                                                 <td>{patient.created_at ? new Date(patient.created_at).toLocaleDateString() : 'N/A'}</td>
                                                 <td>{patient.gender || 'N/A'}</td>
-                                                <td>
-                                                    <span style={{
-                                                        padding: '0.25rem 0.75rem',
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        background: 'rgba(139, 92, 246, 0.2)',
-                                                        color: 'var(--accent-color)',
-                                                        fontSize: '0.875rem',
-                                                        fontWeight: '500'
-                                                    }}>
-                                                        {patient.condition_specific || 'N/A'}
-                                                    </span>
-                                                </td>
+                                                {activeTab === 'completed' && (
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '0.25rem 0.75rem',
+                                                            borderRadius: 'var(--radius-sm)',
+                                                            background: 'rgba(139, 92, 246, 0.2)',
+                                                            color: 'var(--accent-color)',
+                                                            fontSize: '0.875rem',
+                                                            fontWeight: '500'
+                                                        }}>
+                                                            {patient.condition_specific || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                )}
                                                 <td>
                                                     <div className="flex gap-1">
-                                                        <button
-                                                            onClick={() => handleViewPatient(patient)}
-                                                            className="btn btn-primary"
-                                                            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                                                        >
-                                                            View
-                                                        </button>
+                                                        {activeTab === 'completed' ? (
+                                                            <button
+                                                                onClick={() => handleViewPatient(patient)}
+                                                                className="btn btn-primary"
+                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                            >
+                                                                View
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleResumePatient(patient)}
+                                                                className="btn btn-warning"
+                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                            >
+                                                                ✏️ Resume Filling
+                                                            </button>
+
+                                                        )}
                                                     </div>
                                                 </td>
+
                                             </tr>
                                         ))
                                     ) : (
@@ -236,7 +297,7 @@ function PatientDetails() {
                             border: '1px solid rgba(59, 130, 246, 0.2)'
                         }}>
                             <div style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                                {selectedPatient.patient_identifier || 'No Identifier'}
+                                {selectedPatient.patientId || 'No Identifier'}
                             </div>
                             <div style={{ color: 'var(--text-secondary)' }}>
                                 Internal ID: {selectedPatient.id}

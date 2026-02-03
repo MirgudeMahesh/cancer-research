@@ -1,14 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePatients } from '../context/PatientContext';
 
 function Dashboard() {
     const navigate = useNavigate();
     const { currentUser, logout } = useAuth();
+    const { resetForm } = usePatients();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    const handleAddPatientClick = () => {
+        resetForm();
+        navigate('/add-patient');
+    };
+
+
 
     return (
         <div>
@@ -18,7 +27,7 @@ function Dashboard() {
                     textAlign: 'center',
                     padding: '1.5rem 2.5rem',
                     background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                  
+
                 }}>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
                         Welcome, Doctor
@@ -32,7 +41,7 @@ function Dashboard() {
                     <div
                         className="glass-card"
                         style={{ cursor: 'pointer', textAlign: 'center', padding: '3rem 2rem' }}
-                        onClick={() => navigate('/add-patient')}
+                        onClick={handleAddPatientClick}
                     >
                         <div
                             className="flex-center mb-3"
@@ -51,12 +60,13 @@ function Dashboard() {
                             Add Patient
                         </h2>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                            Register a new patient 
+                            Register a new patient
                         </p>
-                        <button className="btn btn-primary">
+                        <button onClick={handleAddPatientClick} className="btn btn-primary">
                             Get Started
                         </button>
                     </div>
+
 
                     <div
                         className="glass-card"

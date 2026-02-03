@@ -19,6 +19,9 @@ export const PatientProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [currentPatientForm, setCurrentPatientForm] = useState({
+        id: null,
+        status: 'completed',
+        data: {}, // Flat object containing all patient fields
         personalDetails: {},
         healthDetails: {},
         backgroundDetails: {},
@@ -27,6 +30,8 @@ export const PatientProvider = ({ children }) => {
         miscellaneous: {},
         nutritionMonitoring: {}
     });
+
+
 
     // Fetch patients when doctor logs in
     useEffect(() => {
@@ -68,24 +73,24 @@ export const PatientProvider = ({ children }) => {
         }
     };
 
-    const addPatient = async (patientFormData) => {
+    const addPatient = async (patientFormData, status = 'completed') => {
         if (!currentUser?.id) return { success: false, message: 'Not authenticated' };
 
-        // Flatten the multi-section form data into a single object for the API
+        // Use the flat data object as the primary source of truth.
+        // It should contain all fields from all sections.
         const flattenedData = {
+            ...patientFormData.data,
             doctor_id: currentUser.id,
-            ...patientFormData.personalDetails,
-            ...patientFormData.healthDetails,
-            ...patientFormData.backgroundDetails,
-            ...patientFormData.nutritionIntervention,
-            ...patientFormData.anthropometric,
-            ...patientFormData.miscellaneous,
-            ...patientFormData.nutritionMonitoring
+            status: status
         };
 
+        const isUpdate = patientFormData.id !== null && patientFormData.id !== undefined;
+        const url = isUpdate ? `${API_BASE_URL}/patients/${patientFormData.id}` : `${API_BASE_URL}/patients`;
+        const method = isUpdate ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch(`${API_BASE_URL}/patients`, {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -96,25 +101,37 @@ export const PatientProvider = ({ children }) => {
             if (data.success) {
                 await fetchPatients(); // Refresh list
                 resetForm();
-                return { success: true };
+                return {
+                    success: true,
+                    patientId: isUpdate ? patientFormData.id : data.patientId
+                };
             } else {
                 return { success: false, message: data.message };
             }
         } catch (error) {
-            console.error('Error adding patient:', error);
+            console.error('Error saving patient:', error);
             return { success: false, message: 'Server connection failed' };
         }
     };
 
+
     const saveFormProgress = (section, data) => {
-        setCurrentPatientForm(prev => ({
-            ...prev,
-            [section]: { ...prev[section], ...data }
-        }));
+        setCurrentPatientForm(prev => {
+            const updatedData = { ...prev.data, ...data };
+            return {
+                ...prev,
+                data: updatedData,
+                [section]: { ...prev[section], ...data }
+            };
+        });
     };
+
 
     const resetForm = () => {
         setCurrentPatientForm({
+            id: null,
+            status: 'completed',
+            data: {},
             personalDetails: {},
             healthDetails: {},
             backgroundDetails: {},
@@ -125,6 +142,28 @@ export const PatientProvider = ({ children }) => {
         });
     };
 
+
+    const editPatient = (patient) => {
+        // We need to map the flat patient object back to the multi-section structure
+        const sectionedData = {
+            id: patient.id,
+            status: patient.status || 'completed',
+            data: { ...patient },
+            personalDetails: { ...patient },
+            healthDetails: { ...patient },
+            backgroundDetails: { ...patient },
+            nutritionIntervention: { ...patient },
+            anthropometric: { ...patient },
+            miscellaneous: { ...patient },
+            nutritionMonitoring: { ...patient }
+        };
+
+        // Sections populated above
+
+        setCurrentPatientForm(sectionedData);
+    };
+
+
     return (
         <PatientContext.Provider
             value={{
@@ -133,8 +172,10 @@ export const PatientProvider = ({ children }) => {
                 addPatient,
                 saveFormProgress,
                 resetForm,
+                editPatient,
                 isLoading,
                 refreshPatients: fetchPatients
+
             }}
         >
             {children}
