@@ -73,7 +73,7 @@ function Dashboard() {
                             onClick={(e) => { e.stopPropagation(); handleAddPatientClick(); }}
                             className="btn btn-primary"
                             disabled={submittingAction !== null}
-                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer' }}
+                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                         >
                             {submittingAction === 'add' ? '⌛ Adding...' : 'Get Started'}
                         </button>
@@ -107,7 +107,7 @@ function Dashboard() {
                             onClick={(e) => { e.stopPropagation(); handleViewPatientsClick(); }}
                             className="btn btn-success"
                             disabled={submittingAction !== null}
-                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer' }}
+                            style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                         >
                             {submittingAction === 'view' ? '⌛ Loading...' : 'View Patients'}
                         </button>

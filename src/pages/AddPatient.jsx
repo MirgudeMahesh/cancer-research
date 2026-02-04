@@ -159,6 +159,7 @@ function AddPatient() {
     };
 
     const handleNext = () => {
+        if (submittingAction) return;
         const missing = getMissingFields(currentStep);
         if (missing.length > 0) {
             // Mark all current fields as touched to show red highlights
@@ -185,6 +186,7 @@ function AddPatient() {
 
 
     const handlePrevious = () => {
+        if (submittingAction) return;
         saveFormProgress(currentStepData.section, formData);
         if (currentStep > 1) {
             setCurrentStep(prev => prev - 1);
@@ -205,6 +207,7 @@ function AddPatient() {
 
 
     const handleReview = () => {
+        if (submittingAction) return;
         // Save current step progress before showing review
         saveFormProgress(currentStepData.section, formData);
         setShowReview(true);
@@ -615,7 +618,12 @@ function AddPatient() {
                     <div className="glass-card">
                         <div className="flex-between mb-4">
                             <h2 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Review Patient Information</h2>
-                            <button onClick={() => setShowReview(false)} className="btn btn-secondary">
+                            <button
+                                onClick={() => !submittingAction && setShowReview(false)}
+                                className="btn btn-secondary"
+                                disabled={submittingAction !== null}
+                                style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
+                            >
                                 Back to Form
                             </button>
                         </div>
@@ -664,7 +672,12 @@ function AddPatient() {
                             >
                                 {submittingAction === 'add' ? '⌛ Adding...' : '✓ Finalize & Add Patient'}
                             </button>
-                            <button onClick={() => setShowReview(false)} className="btn btn-secondary">
+                            <button
+                                onClick={() => !submittingAction && setShowReview(false)}
+                                className="btn btn-secondary"
+                                disabled={submittingAction !== null}
+                                style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
+                            >
                                 Cancel
                             </button>
                         </div>
@@ -693,10 +706,10 @@ function AddPatient() {
                             <div
                                 key={step.id}
                                 className={`step ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                                onClick={() => isAccessible && handleStepClick(step.id)}
+                                onClick={() => !submittingAction && isAccessible && handleStepClick(step.id)}
                                 style={{
                                     opacity: isAccessible ? 1 : 0.5,
-                                    cursor: isAccessible ? 'pointer' : 'not-allowed'
+                                    cursor: (isAccessible && !submittingAction) ? 'pointer' : 'not-allowed'
                                 }}
                             >
                                 <div className="step-circle">{step.id}</div>
@@ -836,11 +849,21 @@ function AddPatient() {
                         </div>
 
                         <div className="flex gap-2">
-                            <button onClick={handleReview} className="btn btn-secondary">
+                            <button
+                                onClick={handleReview}
+                                className="btn btn-secondary"
+                                disabled={submittingAction !== null}
+                                style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
+                            >
                                 👁️ Review All
                             </button>
                             {currentStep > 1 && (
-                                <button onClick={handlePrevious} className="btn btn-secondary">
+                                <button
+                                    onClick={handlePrevious}
+                                    className="btn btn-secondary"
+                                    disabled={submittingAction !== null}
+                                    style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
+                                >
                                     ← Previous
                                 </button>
                             )}
@@ -848,13 +871,15 @@ function AddPatient() {
                                 <button
                                     onClick={handleNext}
                                     className="btn btn-primary"
+                                    disabled={submittingAction !== null}
+                                    style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                                 >
                                     Next →
                                 </button>
                             ) : (
                                 <button
                                     onClick={() => {
-
+                                        if (submittingAction) return;
                                         const missing = getMissingFields(currentStep);
                                         if (missing.length > 0) {
                                             const newTouched = {};
@@ -880,8 +905,10 @@ function AddPatient() {
 
                                     }}
                                     className="btn btn-success"
+                                    disabled={submittingAction !== null}
+                                    style={{ cursor: submittingAction ? 'not-allowed' : 'pointer', opacity: submittingAction ? 0.7 : 1 }}
                                 >
-                                    ✓ Add Patient
+                                    {submittingAction === 'add' ? '⌛ Adding...' : '✓ Add Patient'}
                                 </button>
                             )}
                         </div>
