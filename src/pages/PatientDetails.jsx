@@ -21,6 +21,7 @@ function PatientDetails() {
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({});
+    const [submittingAction, setSubmittingAction] = useState(null);
 
     const handleLogout = () => {
         logout();
@@ -37,14 +38,19 @@ function PatientDetails() {
     });
 
     const handleResumePatient = (patient) => {
+        if (submittingAction) return;
+        setSubmittingAction('resume');
         editPatient(patient);
         navigate('/add-patient');
     };
 
 
     const handleViewPatient = (patient) => {
+        if (submittingAction) return;
+        setSubmittingAction('view');
         setSelectedPatient(patient);
         setIsEditing(false);
+        setSubmittingAction(null);
     };
 
     const handleEditPatient = (patient) => {
@@ -242,19 +248,20 @@ function PatientDetails() {
                                                             <button
                                                                 onClick={() => handleViewPatient(patient)}
                                                                 className="btn btn-primary"
-                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', opacity: submittingAction ? 0.7 : 1 }}
+                                                                disabled={submittingAction !== null}
                                                             >
-                                                                View
+                                                                {submittingAction === 'view' ? '...' : 'View'}
                                                             </button>
                                                         ) : (
                                                             <button
                                                                 onClick={() => handleResumePatient(patient)}
                                                                 className="btn btn-warning"
-                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', opacity: submittingAction ? 0.7 : 1 }}
+                                                                disabled={submittingAction !== null}
                                                             >
-                                                                ✏️ Resume Filling
+                                                                {submittingAction === 'resume' ? '...' : '✏️ Resume Filling'}
                                                             </button>
-
                                                         )}
                                                     </div>
                                                 </td>

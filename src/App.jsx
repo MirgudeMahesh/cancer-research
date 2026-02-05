@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AddPatient from './pages/AddPatient';
 import PatientDetails from './pages/PatientDetails';
+import RegistrationForm from './pages/RegistrationForm';
+import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PatientProvider } from './context/PatientContext';
 import GlobalHeader from './components/GlobalHeader';
@@ -33,6 +35,8 @@ function App() {
                     <GlobalHeader />
                     <Routes>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/registration-form" element={<RegistrationForm />} />
+                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
                         <Route
                             path="/dashboard"
                             element={

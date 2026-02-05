@@ -12,7 +12,12 @@ const GlobalHeader = () => {
         navigate('/login');
     };
 
-    const showNav = isAuthenticated && location.pathname !== '/login';
+    if (location.pathname === '/registration-form' ||
+        location.pathname === '/admin-dashboard') return null;
+
+    const showNav = isAuthenticated &&
+        location.pathname !== '/login' &&
+        location.pathname !== '/registration-form';
 
     return (
         <div style={{
