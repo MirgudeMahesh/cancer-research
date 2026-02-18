@@ -129,16 +129,20 @@ function AddPatient() {
         }
         // Auto-calculate hospital stay length if discharge date or mortality status changes
         if ((questionId === 'hospitalDischargeDate' && value) || (questionId === 'mortality' && value === 'Yes')) {
-            const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
+            const admissionDateStr = { ...currentPatientForm.data, ...updatedData }.dateOfAdmission;
             const targetDateStr = questionId === 'hospitalDischargeDate' ? value : updatedData.dateOfDeath;
 
             if (admissionDateStr && targetDateStr) {
                 const start = new Date(admissionDateStr);
                 const end = new Date(targetDateStr);
                 if (!isNaN(start) && !isNaN(end)) {
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    updatedData.hospitalStayLength = diffDays;
+                    if (end < start) {
+                        updatedData.hospitalStayLength = '';
+                    } else {
+                        const diffTime = end - start;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        updatedData.hospitalStayLength = diffDays;
+                    }
                 }
             } else if (questionId === 'mortality' && value === 'Yes') {
                 updatedData.hospitalStayLength = ''; // Reset if dying but no date yet
@@ -146,29 +150,29 @@ function AddPatient() {
         }
 
         if (questionId === 'dateOfDeath' && value) {
-            const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
+            const admissionDateStr = { ...currentPatientForm.data, ...updatedData }.dateOfAdmission;
             if (admissionDateStr) {
                 const start = new Date(admissionDateStr);
                 const end = new Date(value);
                 if (!isNaN(start) && !isNaN(end)) {
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    updatedData.hospitalStayLength = diffDays;
+                    if (end < start) {
+                        updatedData.hospitalStayLength = '';
+                    } else {
+                        const diffTime = end - start;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        updatedData.hospitalStayLength = diffDays;
+                    }
                 }
             }
         }
 
         // BMI calculation
-        if (questionId === 'height' || questionId === 'hosp_currentWeight' || questionId === 'inter_currentWeight' || questionId === 'disch_currentWeight') {
+        if (questionId === 'height' || questionId === 'hosp_currentWeight') {
             const height = questionId === 'height' ? value : updatedData.height;
             const hospWeight = questionId === 'hosp_currentWeight' ? value : updatedData.hosp_currentWeight;
-            const interWeight = questionId === 'inter_currentWeight' ? value : updatedData.inter_currentWeight;
-            const dischWeight = questionId === 'disch_currentWeight' ? value : updatedData.disch_currentWeight;
 
             if (height && height > 0) {
                 if (hospWeight) updatedData.hosp_bmi = (hospWeight / ((height / 100) * (height / 100))).toFixed(1);
-                if (interWeight) updatedData.inter_bmi = (interWeight / ((height / 100) * (height / 100))).toFixed(1);
-                if (dischWeight) updatedData.disch_bmi = (dischWeight / ((height / 100) * (height / 100))).toFixed(1);
             }
         }
 
@@ -732,7 +736,7 @@ function AddPatient() {
 
                         {renderReviewSection('personalDetails', 'Personal Details')}
                         {renderReviewSection('healthDetails', 'Medical History')}
-                        {renderReviewSection('backgroundDetails', 'Dietetic Assessment')}
+                        {renderReviewSection('backgroundDetails', 'Anthropometric and Strength Evaluation')}
                         {renderReviewSection('nutritionIntervention', 'Nutrition Interventional Plans')}
                         {renderReviewSection('miscellaneous', 'Biochemical Evaluation')}
                         {renderReviewSection('nutritionMonitoring', 'Nutrition Monitoring')}
@@ -742,6 +746,20 @@ function AddPatient() {
                                 onClick={() => {
                                     if (submittingAction) return;
                                     // Final validation before actual adding
+                                    const allData = currentPatientForm.data;
+                                    if (allData.dateOfAdmission && allData.hospitalDischargeDate) {
+                                        if (new Date(allData.hospitalDischargeDate) < new Date(allData.dateOfAdmission)) {
+                                            alert('Hospital Discharge Date must be after Date of Admission.');
+                                            return;
+                                        }
+                                    }
+                                    if (allData.dateOfAdmission && allData.dateOfDeath) {
+                                        if (new Date(allData.dateOfDeath) < new Date(allData.dateOfAdmission)) {
+                                            alert('Date of Death must be after Date of Admission.');
+                                            return;
+                                        }
+                                    }
+
                                     const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
 
                                     if (!firstInvalidStep) {
@@ -840,12 +858,11 @@ function AddPatient() {
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>
                         {currentStep === 1 ? 'Personal Details' :
                             currentStep === 2 ? 'Medical History' :
-                                currentStep === 3 ? 'Dietetic Assessment' :
+                                currentStep === 3 ? 'Anthropometric and Strength Evaluation' :
                                     currentStep === 4 ? 'Nutrition Interventional Plans' :
-                                        currentStep === 5 ? 'Anthropometric & Strength Evaluation' :
-                                            currentStep === 6 ? 'Biochemical Evaluation' :
-                                                currentStep === 7 ? 'Nutrition Monitoring' :
-                                                    `${currentStepData.name} Details`}
+                                        currentStep === 5 ? 'Biochemical Evaluation' :
+                                            currentStep === 6 ? 'Nutrition Monitoring' :
+                                                `${currentStepData.name} Details`}
                     </h2>
 
                     <form>
@@ -996,6 +1013,21 @@ function AddPatient() {
                                             }, 100);
                                             return;
                                         }
+
+                                        const allData = { ...currentPatientForm.data, ...formData };
+                                        if (allData.dateOfAdmission && allData.hospitalDischargeDate) {
+                                            if (new Date(allData.hospitalDischargeDate) < new Date(allData.dateOfAdmission)) {
+                                                alert('Hospital Discharge Date must be after Date of Admission.');
+                                                return;
+                                            }
+                                        }
+                                        if (allData.dateOfAdmission && allData.dateOfDeath) {
+                                            if (new Date(allData.dateOfDeath) < new Date(allData.dateOfAdmission)) {
+                                                alert('Date of Death must be after Date of Admission.');
+                                                return;
+                                            }
+                                        }
+
                                         saveFormProgress(currentStepData.section, formData);
                                         const finalData = {
                                             ...currentPatientForm,

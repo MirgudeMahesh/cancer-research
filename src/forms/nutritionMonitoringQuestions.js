@@ -31,7 +31,7 @@ export const nutritionMonitoringQuestions = [
         label: 'Hospital Discharge Date',
         type: 'date',
         required: true,
-        showIf: (data) => data.mortality === 'No'
+        showIf: (data) => data.mortality === 'No' && data.patientType === 'In-Patient'
     },
     {
         id: 'hospitalStayLength',
@@ -39,7 +39,8 @@ export const nutritionMonitoringQuestions = [
         type: 'number',
         placeholder: 'Autofilled',
         required: false,
-        readOnly: true
+        readOnly: true,
+        showIf: (data) => data.patientType === 'In-Patient'
     },
     {
         id: 'discontinueOncologyTreatment',

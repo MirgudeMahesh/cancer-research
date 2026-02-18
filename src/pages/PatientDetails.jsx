@@ -313,9 +313,8 @@ function PatientDetails() {
 
                         {renderDetailSection('Personal Details', personalDetailsQuestions, 'personalDetails')}
                         {renderDetailSection('Medical History', healthDetailsQuestions, 'healthDetails')}
-                        {renderDetailSection('Dietetic Assessment', backgroundDetailsQuestions, 'backgroundDetails')}
+                        {renderDetailSection('Anthropometric and Strength Evaluation', backgroundDetailsQuestions, 'backgroundDetails')}
                         {renderDetailSection('Nutrition Interventional Plans', nutritionInterventionQuestions, 'nutritionIntervention')}
-                        {renderDetailSection('Anthropometric & Strength Evaluation', anthropometricQuestions, 'anthropometric')}
                         {renderDetailSection('Biochemical Evaluation', biochemicalEvaluationQuestions, 'miscellaneous')}
                         {renderDetailSection('Nutrition Monitoring', nutritionMonitoringQuestions, 'nutritionMonitoring')}
 

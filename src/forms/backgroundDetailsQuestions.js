@@ -4,6 +4,11 @@ export const backgroundDetailsQuestions = [
     ...anthropometricQuestions,
 
     {
+        id: 'dieteticAssessmentHeading',
+        type: 'heading',
+        label: 'Dietetic Assessment'
+    },
+    {
         id: 'dieteticAssessmentType',
         label: 'Type of Dietetic Assessment',
         type: 'checkbox-group',
