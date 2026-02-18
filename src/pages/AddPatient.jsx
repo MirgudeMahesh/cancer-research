@@ -6,7 +6,6 @@ import { personalDetailsQuestions } from '../forms/personalDetailsQuestions';
 import { healthDetailsQuestions } from '../forms/healthDetailsQuestions';
 import { backgroundDetailsQuestions } from '../forms/backgroundDetailsQuestions';
 import { nutritionInterventionQuestions } from '../forms/nutritionInterventionQuestions';
-import { anthropometricQuestions } from '../forms/anthropometricQuestions';
 import { biochemicalEvaluationQuestions } from '../forms/biochemicalEvaluationQuestions';
 import { nutritionMonitoringQuestions } from '../forms/nutritionMonitoringQuestions';
 
@@ -15,10 +14,61 @@ const STEPS = [
     { id: 2, name: 'History', section: 'healthDetails', questions: healthDetailsQuestions },
     { id: 3, name: 'Assessment', section: 'backgroundDetails', questions: backgroundDetailsQuestions },
     { id: 4, name: 'Intervention', section: 'nutritionIntervention', questions: nutritionInterventionQuestions },
-    { id: 5, name: 'Anthropometric', section: 'anthropometric', questions: anthropometricQuestions },
-    { id: 6, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions },
-    { id: 7, name: 'Monitoring', section: 'nutritionMonitoring', questions: nutritionMonitoringQuestions }
+    { id: 5, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions },
+    { id: 6, name: 'Monitoring', section: 'nutritionMonitoring', questions: nutritionMonitoringQuestions }
 ];
+
+
+
+
+
+
+//calculate age
+const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let years = today.getFullYear() - birthDate.getFullYear();
+    let months = today.getMonth() - birthDate.getMonth();
+    let days = today.getDate() - birthDate.getDate();
+
+    if (days < 0) {
+        months--;
+        const prevMonthDays = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            0
+        ).getDate();
+        days += prevMonthDays;
+    }
+
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    return {
+        years: years >= 0 ? years : 0,
+        months: months >= 0 ? months : 0,
+        days: days >= 0 ? days : 0
+    };
+};
+
+// calculate dob from age
+const calculateDobFromAge = (age) => {
+    if (!age || (!age.years && !age.months && !age.days)) return '';
+
+    const today = new Date();
+    const dob = new Date(today);
+
+    dob.setFullYear(today.getFullYear() - (parseInt(age.years) || 0));
+    dob.setMonth(today.getMonth() - (parseInt(age.months) || 0));
+    dob.setDate(today.getDate() - (parseInt(age.days) || 0));
+
+    return dob.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+};
+
+
 
 function AddPatient() {
     const navigate = useNavigate();
@@ -45,11 +95,38 @@ function AddPatient() {
     const currentStepData = STEPS.find(s => s.id === currentStep);
 
     const handleInputChange = (questionId, value) => {
+        // Prevent future dates
+        const question = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions].find(q => q.id === questionId);
+
+        if (question?.type === 'date' && value) {
+            const selectedDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Compare dates only
+
+            if (selectedDate > today) {
+                alert('Future dates are not allowed.');
+                return;
+            }
+        }
+
         let updatedData = {
             ...formData,
             [questionId]: value
         };
 
+        // Auto-calculate chronological age from Date of Birth
+        if (questionId === 'dateOfBirth' && value) {
+            const age = calculateAge(value);
+            updatedData.chronologicalAge = age;
+        }
+
+        // Auto-calculate Date of Birth from Chronological Age
+        if (questionId === 'chronologicalAge' && value) {
+            const dob = calculateDobFromAge(value);
+            if (dob) {
+                updatedData.dateOfBirth = dob;
+            }
+        }
         // Auto-calculate hospital stay length if discharge date or mortality status changes
         if ((questionId === 'hospitalDischargeDate' && value) || (questionId === 'mortality' && value === 'Yes')) {
             const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
@@ -160,6 +237,30 @@ function AddPatient() {
 
     const handleNext = () => {
         if (submittingAction) return;
+
+        // Custom validation for Medical History step
+        if (currentStep === 2) {
+            const data = { ...currentPatientForm.data, ...formData };
+            if (data.dateOfBirth && data.initialCancerDiagnosis) {
+                if (new Date(data.initialCancerDiagnosis) <= new Date(data.dateOfBirth)) {
+                    alert('Initial Cancer Diagnosis must be after Date of Birth.');
+                    return;
+                }
+            }
+            if (data.dateOfBirth && data.firstCancerTherapy) {
+                if (new Date(data.firstCancerTherapy) <= new Date(data.dateOfBirth)) {
+                    alert('First Cancer Therapy Initiated must be after Date of Birth.');
+                    return;
+                }
+            }
+            if (data.initialCancerDiagnosis && data.firstCancerTherapy) {
+                if (new Date(data.firstCancerTherapy) <= new Date(data.initialCancerDiagnosis)) {
+                    alert('First Cancer Therapy Initiated must be after Initial Cancer Diagnosis.');
+                    return;
+                }
+            }
+        }
+
         const missing = getMissingFields(currentStep);
         if (missing.length > 0) {
             // Mark all current fields as touched to show red highlights
@@ -530,6 +631,7 @@ function AddPatient() {
                     onWheel={(e) => question.type === 'number' && e.target.blur()}
                     required={question.required}
                     readOnly={question.readOnly}
+                    max={question.type === 'date' ? new Date().toISOString().split('T')[0] : undefined}
                     style={{ flex: 1, backgroundColor: question.readOnly ? '#f8fafc' : 'white' }}
                 />
                 {question.unit && (
@@ -632,7 +734,6 @@ function AddPatient() {
                         {renderReviewSection('healthDetails', 'Medical History')}
                         {renderReviewSection('backgroundDetails', 'Dietetic Assessment')}
                         {renderReviewSection('nutritionIntervention', 'Nutrition Interventional Plans')}
-                        {renderReviewSection('anthropometric', 'Anthropometric & Strength Evaluation')}
                         {renderReviewSection('miscellaneous', 'Biochemical Evaluation')}
                         {renderReviewSection('nutritionMonitoring', 'Nutrition Monitoring')}
 

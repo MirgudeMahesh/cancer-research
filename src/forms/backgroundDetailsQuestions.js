@@ -1,4 +1,8 @@
+import { anthropometricQuestions } from './anthropometricQuestions';
+
 export const backgroundDetailsQuestions = [
+    ...anthropometricQuestions,
+
     {
         id: 'dieteticAssessmentType',
         label: 'Type of Dietetic Assessment',
@@ -75,7 +79,7 @@ export const backgroundDetailsQuestions = [
         type: 'number',
         placeholder: 'Enter Fats',
         unit: 'gms',
-        required: true
+        required: false
     },
     {
         id: 'hospitalizationFiber',
@@ -83,7 +87,7 @@ export const backgroundDetailsQuestions = [
         type: 'number',
         placeholder: 'Enter Fiber',
         unit: 'gms',
-        required: true
+        required: false
     },
     {
         id: 'hospitalizationFluids',
@@ -91,7 +95,7 @@ export const backgroundDetailsQuestions = [
         type: 'number',
         placeholder: 'Enter Fluids',
         unit: 'ml',
-        required: true
+        required: false
     },
     {
         id: 'daysToFirstConsultation',

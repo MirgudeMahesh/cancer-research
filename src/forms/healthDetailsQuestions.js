@@ -16,12 +16,21 @@ export const healthDetailsQuestions = [
         required: true
     },
     {
+        id: 'patientType',
+        label: 'Patient Type',
+        type: 'radio-group',
+        options: ['In-Patient', 'Out-Patient'],
+        required: true
+    },
+    {
         id: 'dateOfAdmission',
         label: 'Date of Admission',
         type: 'date',
         placeholder: 'dd-MMM-yyyy',
-        required: true
+        required: true,
+        showIf: (formData) => formData.patientType === 'In-Patient'
     },
+
     {
         id: 'conditionSpecific',
         label: 'Condition Specific',
@@ -49,7 +58,7 @@ export const healthDetailsQuestions = [
             'Other'
         ],
         required: false,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'conditionSpecificOther',
@@ -98,7 +107,7 @@ export const healthDetailsQuestions = [
             const key = Object.keys(neoplasmsOfOrganMap).find(k => formData.primaryDiagnosis.startsWith(k));
             return key ? neoplasmsOfOrganMap[key] : [];
         },
-        required: true,
+        required: false,
         showIf: (formData) => !!formData.primaryDiagnosis
     },
     {
@@ -109,7 +118,7 @@ export const healthDetailsQuestions = [
             if (!formData.neoplasmsOfOrgan) return [];
             return neoplasmsOfRegionMap[formData.neoplasmsOfOrgan] || [];
         },
-        required: true,
+        required: false,
         showIf: (formData) => !!formData.neoplasmsOfOrgan
     },
     {
@@ -160,7 +169,7 @@ export const healthDetailsQuestions = [
             'Stage-IV Metastatic'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'priorSurgery',
@@ -168,7 +177,7 @@ export const healthDetailsQuestions = [
         type: 'select',
         options: ['Yes', 'No'],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'surgeryTiming',
@@ -182,7 +191,7 @@ export const healthDetailsQuestions = [
             'More Than 1 Year'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.priorSurgery === 'Yes'
+        showIf: (formData) => !!formData.patientType && formData.priorSurgery === 'Yes'
     },
     {
         id: 'typeOfTreatment',
@@ -202,7 +211,7 @@ export const healthDetailsQuestions = [
             'Hyperthermia (HIPEC)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'chemotherapyScheme',
@@ -218,7 +227,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy'
     },
     {
         id: 'chemotherapySchemeOther',
@@ -226,7 +235,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyScheme === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyScheme === 'Other (Text Box)'
     },
     {
         id: 'chemotherapyLine',
@@ -239,7 +248,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy'
     },
     {
         id: 'chemotherapyLineOther',
@@ -247,7 +256,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyLine === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyLine === 'Other (Text Box)'
     },
     {
         id: 'performanceStatusScale',
@@ -255,7 +264,7 @@ export const healthDetailsQuestions = [
         type: 'checkbox-group',
         options: ['Ecog Scale', 'Karnofsky Scale'],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'ecogScaleValue',
