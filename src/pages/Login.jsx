@@ -177,7 +177,7 @@ function Login() {
 
                 {!isAdmin && (
                     <>
-                        <div className="mt-4" style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
+                        {/* <div className="mt-4" style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
                             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                                 <strong>Direct Login (Dev Only):</strong>
                             </p>
@@ -195,7 +195,7 @@ function Login() {
                                     CR2024
                                 </span>
                             </p>
-                        </div>
+                        </div> */}
                         <div className="text-center mt-3">
                             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                                 New practitioner? <span
