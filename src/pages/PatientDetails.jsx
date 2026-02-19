@@ -15,7 +15,7 @@ function PatientDetails() {
     const { logout } = useAuth();
     const { patients, editPatient } = usePatients();
 
-    const [activeTab, setActiveTab] = useState('completed');
+    const [activeTab, setActiveTab] = useState('pending');
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -162,21 +162,6 @@ function PatientDetails() {
                         {/* Tabs */}
                         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
                             <button
-                                onClick={() => setActiveTab('completed')}
-                                style={{
-                                    padding: '0.5rem 1.5rem',
-                                    border: 'none',
-                                    background: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: activeTab === 'completed' ? '700' : '400',
-                                    color: activeTab === 'completed' ? 'var(--primary-color)' : 'var(--text-secondary)',
-                                    borderBottom: activeTab === 'completed' ? '3px solid var(--primary-color)' : 'none',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                Completed
-                            </button>
-                            <button
                                 onClick={() => setActiveTab('pending')}
                                 style={{
                                     padding: '0.5rem 1.5rem',
@@ -190,6 +175,21 @@ function PatientDetails() {
                                 }}
                             >
                                 Drafts ({patients.filter(p => (p.status || 'completed') === 'pending').length})
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('completed')}
+                                style={{
+                                    padding: '0.5rem 1.5rem',
+                                    border: 'none',
+                                    background: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'completed' ? '700' : '400',
+                                    color: activeTab === 'completed' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                                    borderBottom: activeTab === 'completed' ? '3px solid var(--primary-color)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Completed
                             </button>
                         </div>
 

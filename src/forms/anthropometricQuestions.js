@@ -156,14 +156,14 @@ export const anthropometricQuestions = [
         label: 'Waist Circumference',
         type: 'number',
         unit: 'Cms',
-        required: true
+        required: false
     },
     {
         id: 'hosp_hipCircumference',
         label: 'Hip Circumference',
         type: 'number',
         unit: 'Cms',
-        required: true
+        required: false
     },
     {
         id: 'hosp_bmi',
@@ -178,20 +178,20 @@ export const anthropometricQuestions = [
         label: 'Middle Upper Arm Circumference',
         type: 'number',
         unit: 'Cms',
-        required: true
+        required: false
     },
     {
         id: 'hosp_calfCircumference',
         label: 'Calf Circumference',
         type: 'number',
         unit: 'Cms',
-        required: true
+        required: false
     },
     {
         id: 'hosp_dynamometry',
         label: 'Dynamometry',
         type: 'number',
         unit: 'Kgs',
-        required: true
+        required: false
     }
 ];

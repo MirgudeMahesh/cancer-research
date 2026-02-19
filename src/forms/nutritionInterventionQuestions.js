@@ -133,20 +133,20 @@ export const nutritionInterventionQuestions = [
         label: 'Total Carbohydrates',
         type: 'number',
         unit: 'gms',
-        required: true
+        required: false
     },
     {
         id: 'totalFiberPlanned',
         label: 'Total Fiber',
         type: 'number',
         unit: 'gms',
-        required: true
+        required: false
     },
     {
         id: 'totalFluidsPlanned',
         label: 'Total Fluids',
         type: 'number',
         unit: 'ml',
-        required: true
+        required: false
     }
 ];
