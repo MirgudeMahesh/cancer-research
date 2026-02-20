@@ -101,7 +101,22 @@ export const nutritionInterventionQuestions = [
         label: 'Type of Parenteral Nutrition',
         type: 'radio-group',
         options: ['Central', 'Peripheral'],
-        showIf: (data) => data.nutritionPlanned?.includes('Parenteral Nutrition') || data.nutritionPlanned?.includes('Normal') || data.nutritionPlanned?.includes('Special'),
+        showIf: (data) => data.nutritionPlanned?.includes('Parenteral Nutrition'),
+        required: true
+    },
+    {
+        id: 'specialNutritionType',
+        label: 'Special Nutrition Type',
+        type: 'select',
+        options: [
+            'Glutamine',
+            'Omega 3',
+            'Vitamin D',
+            'Vitamin C',
+            'Zinc',
+            'Others'
+        ],
+        showIf: (data) => data.nutritionPlanned?.includes('Special'),
         required: true
     },
     // Global Nutrition Planning

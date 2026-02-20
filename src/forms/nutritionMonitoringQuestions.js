@@ -43,6 +43,25 @@ export const nutritionMonitoringQuestions = [
         showIf: (data) => data.patientType === 'In-Patient'
     },
     {
+        id: 'hasComplication',
+        label: 'Was there a complication?',
+        type: 'radio-group',
+        options: ['Yes', 'No'],
+        required: true
+    },
+    {
+        id: 'complicationType',
+        label: 'Complication Type',
+        type: 'select',
+        options: [
+            'Surgical Complication',
+            'Infectious Complication',
+            'Hematologic Complication'
+        ],
+        required: true,
+        showIf: (data) => data.hasComplication === 'Yes'
+    },
+    {
         id: 'discontinueOncologyTreatment',
         label: 'Was there a need to discontinue Oncology treatment?',
         type: 'radio-group',
