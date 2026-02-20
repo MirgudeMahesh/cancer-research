@@ -126,11 +126,54 @@ function PatientDetails() {
                                         {(() => {
                                             if (q.type === 'dynamic-days' && Array.isArray(value)) {
                                                 return (
-                                                    <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                                    <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
                                                         {value.map((day, i) => (
-                                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
-                                                                <span style={{ fontSize: '0.85rem' }}>{day.date ? new Date(day.date).toLocaleDateString() : `Day ${i + 1}`}</span>
-                                                                <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
+                                                            <div key={i} style={{
+                                                                padding: '0.75rem',
+                                                                background: '#f8fafc',
+                                                                borderRadius: 'var(--radius-sm)',
+                                                                border: '1px solid #e2e8f0'
+                                                            }}>
+                                                                <div style={{
+                                                                    fontSize: '0.9rem',
+                                                                    fontWeight: '600',
+                                                                    marginBottom: '0.5rem',
+                                                                    color: 'var(--primary-color)',
+                                                                    borderBottom: '1px solid #e2e8f0',
+                                                                    paddingBottom: '0.25rem'
+                                                                }}>
+                                                                    {day.date ? new Date(day.date).toLocaleDateString() : `Day ${i + 1}`}
+                                                                </div>
+                                                                <div style={{
+                                                                    fontSize: '0.85rem',
+                                                                    display: 'grid',
+                                                                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                                                                    gap: '0.75rem'
+                                                                }}>
+                                                                    {q.subFields ? (
+                                                                        q.subFields.map(sub => {
+                                                                            const val = day[sub.id];
+                                                                            if (val === undefined || val === null || val === '') return null;
+                                                                            return (
+                                                                                <div key={sub.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{sub.label}</span>
+                                                                                    <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{val} {sub.unit || ''}</span>
+                                                                                </div>
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <>
+                                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Energy Target</span>
+                                                                                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{day.energy || 'N/A'}</span>
+                                                                            </div>
+                                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Protein Target</span>
+                                                                                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{day.protein || 'N/A'}</span>
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>

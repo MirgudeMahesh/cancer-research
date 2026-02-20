@@ -616,35 +616,61 @@ function AddPatient() {
                                 )}
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div className="form-group">
-                                    <label className="form-label">Total Energy Met (%)</label>
-                                    <select
-                                        className="form-select"
-                                        value={day.energy}
-                                        onChange={(e) => updateDay(index, 'energy', e.target.value)}
-                                    >
-                                        <option value="">Select %</option>
-                                        <option value="30%">30%</option>
-                                        <option value="50%">50%</option>
-                                        <option value="75%">75%</option>
-                                        <option value="100%">100%</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Total Protein Met (%)</label>
-                                    <select
-                                        className="form-select"
-                                        value={day.protein}
-                                        onChange={(e) => updateDay(index, 'protein', e.target.value)}
-                                    >
-                                        <option value="">Select %</option>
-                                        <option value="30%">30%</option>
-                                        <option value="50%">50%</option>
-                                        <option value="75%">75%</option>
-                                        <option value="100%">100%</option>
-                                    </select>
-                                </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                                {question.subFields ? (
+                                    question.subFields.map(subQ => (
+                                        <div key={subQ.id} className="form-group">
+                                            <label className="form-label" style={{ fontSize: '0.85rem' }}>{subQ.label}</label>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <input
+                                                    type={subQ.type || 'text'}
+                                                    className="form-input"
+                                                    placeholder={subQ.placeholder}
+                                                    value={day[subQ.id] || ''}
+                                                    onChange={(e) => updateDay(index, subQ.id, e.target.value)}
+                                                    onWheel={(e) => subQ.type === 'number' && e.target.blur()}
+                                                    style={{ flex: 1 }}
+                                                />
+                                                {subQ.unit && (
+                                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                                        {subQ.unit}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">Total Energy Met (%)</label>
+                                            <select
+                                                className="form-select"
+                                                value={day.energy}
+                                                onChange={(e) => updateDay(index, 'energy', e.target.value)}
+                                            >
+                                                <option value="">Select %</option>
+                                                <option value="30%">30%</option>
+                                                <option value="50%">50%</option>
+                                                <option value="75%">75%</option>
+                                                <option value="100%">100%</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Total Protein Met (%)</label>
+                                            <select
+                                                className="form-select"
+                                                value={day.protein}
+                                                onChange={(e) => updateDay(index, 'protein', e.target.value)}
+                                            >
+                                                <option value="">Select %</option>
+                                                <option value="30%">30%</option>
+                                                <option value="50%">50%</option>
+                                                <option value="75%">75%</option>
+                                                <option value="100%">100%</option>
+                                            </select>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -728,7 +754,16 @@ function AddPatient() {
                                             {value.map((day, i) => (
                                                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
                                                     <span style={{ fontSize: '0.85rem' }}>{day.date ? new Date(day.date).toLocaleDateString() : `Day ${i + 1}`}</span>
-                                                    <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
+                                                    <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>
+                                                        {question.subFields ? (
+                                                            question.subFields.map(sq => {
+                                                                const val = day[sq.id];
+                                                                return val ? `${sq.label}: ${val}${sq.unit ? sq.unit : ''}` : null;
+                                                            }).filter(Boolean).join(' | ')
+                                                        ) : (
+                                                            `Energy: ${day.energy} | Protein: ${day.protein}`
+                                                        )}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
