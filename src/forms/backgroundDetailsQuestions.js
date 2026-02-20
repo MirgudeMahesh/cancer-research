@@ -23,7 +23,7 @@ export const backgroundDetailsQuestions = [
     {
         id: 'dietType',
         label: 'Type of Diet',
-        type: 'select',
+        type: 'checkbox-group',
         options: [
             'Normal',
             'Special',
@@ -47,13 +47,13 @@ export const backgroundDetailsQuestions = [
             'Pescetarian',
             'Flexitarian'
         ],
-        showIf: (data) => data.dietType === 'Special',
+        showIf: (data) => data.dietType?.includes('Special'),
         required: true
     },
     {
         id: 'hospitalizationHeading',
         type: 'heading',
-        label: 'At Hospitalization/ Pre Hospitalization'
+        label: (data) => data.patientType === 'Out-Patient' ? 'At Evaluation(O/P)' : 'At Hospitalization/ Pre Hospitalization'
     },
     {
         id: 'hospitalizationKcal',

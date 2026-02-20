@@ -30,6 +30,14 @@ export const healthDetailsQuestions = [
         required: true,
         showIf: (formData) => formData.patientType === 'In-Patient'
     },
+    {
+        id: 'dateOfVisit',
+        label: 'Date of Visit',
+        type: 'date',
+        placeholder: 'dd-MMM-yyyy',
+        required: true,
+        showIf: (formData) => formData.patientType === 'Out-Patient'
+    },
 
     {
         id: 'conditionSpecific',

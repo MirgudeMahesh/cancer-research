@@ -182,5 +182,8 @@ const createSection = (prefix, sectionTitle, doneLabel) => [
 ];
 
 export const biochemicalEvaluationQuestions = [
-    ...createSection('hosp', 'Biochemical Evaluation (At Hospitalization)', 'Biochemical Evaluations (At Hospitalization)')
+    ...createSection('hosp',
+        (data) => data.patientType === 'Out-Patient' ? 'Biochemical Evaluation (At Evaluation(O/P))' : 'Biochemical Evaluation (At Hospitalization)',
+        (data) => data.patientType === 'Out-Patient' ? 'Biochemical Evaluations (At Evaluation(O/P))' : 'Biochemical Evaluations (At Hospitalization)'
+    )
 ];

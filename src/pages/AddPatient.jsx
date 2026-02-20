@@ -541,14 +541,37 @@ function AddPatient() {
         }
 
         if (question.type === 'dynamic-days') {
-            const days = value || [{ energy: '', protein: '' }];
+            const days = value || [{ date: '', energy: '', protein: '' }];
             const updateDay = (index, field, val) => {
                 const newDays = [...days];
+
+                // Date Validation: Ensure 2nd date is after 1st, etc.
+                if (field === 'date' && index > 0) {
+                    const prevDate = new Date(newDays[index - 1].date);
+                    const currDate = new Date(val);
+                    if (prevDate && currDate <= prevDate) {
+                        alert('Date must be after the previous day\'s date');
+                        return; // Don't update if invalid
+                    }
+                }
+                // Reverse validation: if modifying a previous date, check if it conflicts with next
+                if (field === 'date' && index < newDays.length - 1) {
+                    const nextDateStr = newDays[index + 1].date;
+                    if (nextDateStr) {
+                        const nextDate = new Date(nextDateStr);
+                        const currDate = new Date(val);
+                        if (currDate >= nextDate) {
+                            alert('Date must be before the next day\'s date');
+                            return;
+                        }
+                    }
+                }
+
                 newDays[index] = { ...newDays[index], [field]: val };
                 handleInputChange(question.id, newDays);
             };
             const addDay = () => {
-                handleInputChange(question.id, [...days, { energy: '', protein: '' }]);
+                handleInputChange(question.id, [...days, { date: '', energy: '', protein: '' }]);
             };
             const removeDay = (index) => {
                 if (days.length > 1) {
@@ -567,18 +590,32 @@ function AddPatient() {
                             border: '1px solid #e2e8f0',
                             position: 'relative'
                         }}>
-                            <div style={{ fontWeight: '600', marginBottom: '1rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
-                                <span>Day {index + 1}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label className="form-label" style={{ marginBottom: '0.25rem', display: 'block', color: 'var(--primary-color)', fontWeight: '600' }}>
+                                        Date for Day {index + 1}
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="form-input"
+                                        value={day.date || ''}
+                                        onChange={(e) => updateDay(index, 'date', e.target.value)}
+                                        max={new Date().toISOString().split('T')[0]} // Prevent future dates? User didn't specify, but good practice.
+                                        required
+                                        style={{ maxWidth: '200px' }}
+                                    />
+                                </div>
                                 {index > 0 && (
                                     <button
                                         type="button"
                                         onClick={() => removeDay(index)}
-                                        style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1.25rem' }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1.25rem', padding: '0.5rem' }}
                                     >
                                         ×
                                     </button>
                                 )}
                             </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <div className="form-group">
                                     <label className="form-label">Total Energy Met (%)</label>
@@ -686,11 +723,11 @@ function AddPatient() {
                             if (question.type === 'dynamic-days' && Array.isArray(value)) {
                                 return (
                                     <div key={key} style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
-                                        <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{question.label}:</div>
+                                        <div style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{typeof question.label === 'function' ? question.label(data) : question.label}:</div>
                                         <div style={{ display: 'grid', gap: '0.5rem' }}>
                                             {value.map((day, i) => (
                                                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
-                                                    <span style={{ fontSize: '0.85rem' }}>Day {i + 1}</span>
+                                                    <span style={{ fontSize: '0.85rem' }}>{day.date ? new Date(day.date).toLocaleDateString() : `Day ${i + 1}`}</span>
                                                     <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
                                                 </div>
                                             ))}
@@ -702,7 +739,7 @@ function AddPatient() {
                             return (
                                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
                                     <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-                                        {question.label}:
+                                        {typeof question.label === 'function' ? question.label(data) : question.label}:
                                     </span>
                                     <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
                                         {typeof value === 'object' && value !== null
@@ -885,7 +922,7 @@ function AddPatient() {
                                             borderBottom: '1px solid #e2e8f0',
                                             paddingBottom: '0.5rem'
                                         }}>
-                                            {question.label}
+                                            {typeof question.label === 'function' ? question.label(formData) : question.label}
                                         </h3>
                                     );
                                 }
@@ -907,7 +944,7 @@ function AddPatient() {
                                         style={showError ? { borderLeft: '3px solid var(--danger-color)', paddingLeft: '1rem', marginLeft: '-1.25rem', transition: 'all 0.3s ease' } : {}}
                                     >
                                         <label htmlFor={question.id} className="form-label" style={showError ? { color: 'var(--danger-color)' } : {}}>
-                                            {question.label} {question.required && <span style={{ color: 'var(--danger-color)' }}>*</span>}
+                                            {typeof question.label === 'function' ? question.label(formData) : question.label} {question.required && <span style={{ color: 'var(--danger-color)' }}>*</span>}
                                         </label>
                                         <div className={showError ? 'field-error' : ''}>
                                             {renderQuestion(question)}

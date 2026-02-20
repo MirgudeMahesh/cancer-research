@@ -112,7 +112,7 @@ export const anthropometricQuestions = [
     {
         id: 'hosp_anthropometricHeading',
         type: 'heading',
-        label: 'At Hospitalization'
+        label: (data) => data.patientType === 'Out-Patient' ? 'At Evaluation(O/P)' : 'At Hospitalization'
     },
     {
         id: 'hosp_currentWeight',

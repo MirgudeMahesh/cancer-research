@@ -50,7 +50,7 @@ export const PatientProvider = ({ children }) => {
             const data = await response.json();
             if (data.success) {
                 // Parse JSON columns back into objects/arrays
-                const jsonColumns = ['monitoringDays', 'performanceStatusScale', 'nutritionPlanned', 'dieteticAssessmentType', 'enteralNutritionType', 'nutritionalRiskTool', 'chronologicalAge', 'glimCriteria'];
+                const jsonColumns = ['monitoringDays', 'performanceStatusScale', 'nutritionPlanned', 'dieteticAssessmentType', 'enteralNutritionType', 'nutritionalRiskTool', 'chronologicalAge', 'glimCriteria', 'dietType'];
                 const parsedPatients = data.patients.map(patient => {
                     const parsed = { ...patient };
                     jsonColumns.forEach(col => {

@@ -2,7 +2,7 @@ export const nutritionInterventionQuestions = [
     {
         id: 'nutritionPlanningHeading',
         type: 'heading',
-        label: 'Nutrition Planning (At Hospitalization)'
+        label: (data) => data.patientType === 'Out-Patient' ? 'Nutrition Planning (At Evaluation(O/P))' : 'Nutrition Planning (At Hospitalization)'
     },
     {
         id: 'nutritionPlanned',
@@ -11,7 +11,9 @@ export const nutritionInterventionQuestions = [
         options: [
             'Oral Nutrition Support',
             'Enteral Tube feeding',
-            'Parenteral Nutrition'
+            'Parenteral Nutrition',
+            'Normal',
+            'Special'
         ],
         required: true
     },
@@ -96,17 +98,17 @@ export const nutritionInterventionQuestions = [
     // Parenteral Nutrition Section
     {
         id: 'parenteralNutritionType',
-        label: 'Parenteral Nutrition',
+        label: 'Type of Parenteral Nutrition',
         type: 'radio-group',
         options: ['Central', 'Peripheral'],
-        showIf: (data) => data.nutritionPlanned?.includes('Parenteral Nutrition'),
+        showIf: (data) => data.nutritionPlanned?.includes('Parenteral Nutrition') || data.nutritionPlanned?.includes('Normal') || data.nutritionPlanned?.includes('Special'),
         required: true
     },
     // Global Nutrition Planning
     {
         id: 'planningHospitalizationHeading',
         type: 'heading',
-        label: 'Nutrition Planned At Hospitalization'
+        label: (data) => data.patientType === 'Out-Patient' ? 'Nutrition Planning (At Evaluation(O/P))' : 'Nutrition Planned At Hospitalization'
     },
     {
         id: 'totalKcalPlanned',

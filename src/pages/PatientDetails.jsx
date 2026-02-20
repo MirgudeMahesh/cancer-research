@@ -116,7 +116,7 @@ function PatientDetails() {
                                         letterSpacing: '0.05em',
                                         marginBottom: '0.25rem'
                                     }}>
-                                        {q.label}
+                                        {typeof q.label === 'function' ? q.label(selectedPatient) : q.label}
                                     </div>
                                     <div style={{
                                         fontWeight: '600',
@@ -129,7 +129,7 @@ function PatientDetails() {
                                                     <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.5rem' }}>
                                                         {value.map((day, i) => (
                                                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
-                                                                <span style={{ fontSize: '0.85rem' }}>Day {i + 1}</span>
+                                                                <span style={{ fontSize: '0.85rem' }}>{day.date ? new Date(day.date).toLocaleDateString() : `Day ${i + 1}`}</span>
                                                                 <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>Energy: {day.energy} | Protein: {day.protein}</span>
                                                             </div>
                                                         ))}
@@ -139,6 +139,18 @@ function PatientDetails() {
 
                                             // Handle special types or missing values
                                             if (value === null || value === undefined || value === '') return 'N/A';
+
+                                            // Handle arrays (e.g. checkbox groups)
+                                            if (Array.isArray(value)) return value.join(', ');
+
+                                            // Handle objects (e.g. age)
+                                            if (typeof value === 'object') {
+                                                if (value.years || value.months || value.days) {
+                                                    return `${value.years || 0}y ${value.months || 0}m ${value.days || 0}d`;
+                                                }
+                                                return JSON.stringify(value);
+                                            }
+
                                             return `${value}${unit}`;
                                         })()}
                                     </div>
