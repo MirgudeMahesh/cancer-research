@@ -209,7 +209,7 @@ function Login() {
                     </>
                 )}
 
-                {isAdmin && (
+                {/* {isAdmin && (
                     <div className="mt-4" style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0' }}>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                             <strong>Admin Credentials:</strong>
@@ -219,7 +219,7 @@ function Login() {
                             Pass: <span style={{ cursor: 'pointer', color: 'var(--primary-color)', textDecoration: 'underline' }} onClick={() => setPassword('pulse@testing@nhs')}>pulse@testing@nhs</span>
                         </p>
                     </div>
-                )}
+                )} */}
             </div>
         </div>
     );
