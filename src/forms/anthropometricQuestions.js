@@ -99,14 +99,18 @@ export const anthropometricQuestions = [
         id: 'usualBodyWeight',
         label: 'Usual body weight (last 1 year)',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'Kg',
+        min: 1,
+        max: 300,
         required: true
     },
     {
         id: 'height',
         label: 'Height',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
+        min: 25,
+        max: 220,
         required: true
     },
     {
@@ -118,7 +122,9 @@ export const anthropometricQuestions = [
         id: 'hosp_currentWeight',
         label: 'Current Body Weight',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'Kg',
+        min: 1,
+        max: 300,
         required: true
     },
     {
@@ -147,7 +153,9 @@ export const anthropometricQuestions = [
         id: 'hosp_weightLossAmount',
         label: 'How Much Weight did Patient Loose',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'Kg',
+        min: 0,
+        max: 300,
         showIf: (data) => data.hosp_weightLoss === 'Yes',
         required: true
     },
@@ -155,15 +163,15 @@ export const anthropometricQuestions = [
         id: 'hosp_waistCircumference',
         label: 'Waist Circumference',
         type: 'number',
-        unit: 'Cms',
-        required: true
+        unit: 'cm',
+        required: false
     },
     {
         id: 'hosp_hipCircumference',
         label: 'Hip Circumference',
         type: 'number',
-        unit: 'Cms',
-        required: true
+        unit: 'cm',
+        required: false
     },
     {
         id: 'hosp_bmi',
@@ -177,22 +185,22 @@ export const anthropometricQuestions = [
         id: 'hosp_muac',
         label: 'Middle Upper Arm Circumference',
         type: 'number',
-        unit: 'Cms',
-        required: true
+        unit: 'cm',
+        required: false
     },
     {
         id: 'hosp_calfCircumference',
         label: 'Calf Circumference',
         type: 'number',
-        unit: 'Cms',
-        required: true
+        unit: 'cm',
+        required: false
     },
     {
         id: 'hosp_dynamometry',
         label: 'Dynamometry',
         type: 'number',
-        unit: 'Kgs',
-        required: true
+        unit: 'kg',
+        required: false 
     },
     {
         id: 'inter_anthropometricHeading',
@@ -203,21 +211,23 @@ export const anthropometricQuestions = [
         id: 'inter_currentWeight',
         label: 'Current Body Weight (Intermediate Value)',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'kg',
+        min: 1,
+        max: 300,
         required: true
     },
     {
         id: 'inter_waistCircumference',
         label: 'Waist Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'inter_hipCircumference',
         label: 'Hip Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
@@ -232,21 +242,21 @@ export const anthropometricQuestions = [
         id: 'inter_muac',
         label: 'Middle Upper Arm Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'inter_calfCircumference',
         label: 'Calf Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'inter_dynamometry',
         label: 'Dynamometry',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'kg',
         required: true
     },
     {
@@ -258,21 +268,23 @@ export const anthropometricQuestions = [
         id: 'disch_currentWeight',
         label: 'Current Body Weight (At Discharge)',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'kg',
+        min: 1,
+        max: 300,
         required: true
     },
     {
         id: 'disch_waistCircumference',
         label: 'Waist Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'disch_hipCircumference',
         label: 'Hip Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
@@ -287,21 +299,21 @@ export const anthropometricQuestions = [
         id: 'disch_muac',
         label: 'Middle Upper Arm Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'disch_calfCircumference',
         label: 'Calf Circumference',
         type: 'number',
-        unit: 'Cms',
+        unit: 'cm',
         required: true
     },
     {
         id: 'disch_dynamometry',
         label: 'Dynamometry',
         type: 'number',
-        unit: 'Kgs',
+        unit: 'kg',
         required: true
     }
 ];

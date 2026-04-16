@@ -16,12 +16,21 @@ export const healthDetailsQuestions = [
         required: true
     },
     {
+        id: 'patientType',
+        label: 'Patient Type',
+        type: 'radio-group',
+        options: ['In-Patient', 'Out-Patient'],
+        required: true
+    },
+    {
         id: 'dateOfAdmission',
         label: 'Date of Admission',
         type: 'date',
         placeholder: 'dd-MMM-yyyy',
-        required: true
+        required: true,
+        showIf: (formData) => formData.patientType === 'In-Patient'
     },
+
     {
         id: 'conditionSpecific',
         label: 'Condition Specific',
@@ -48,8 +57,8 @@ export const healthDetailsQuestions = [
             'Hematologic Oncology',
             'Other'
         ],
-        required: false,
-        showIf: (formData) => !!formData.dateOfAdmission
+        required: true,
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'conditionSpecificOther',
@@ -98,7 +107,7 @@ export const healthDetailsQuestions = [
             const key = Object.keys(neoplasmsOfOrganMap).find(k => formData.primaryDiagnosis.startsWith(k));
             return key ? neoplasmsOfOrganMap[key] : [];
         },
-        required: true,
+        required: false,
         showIf: (formData) => !!formData.primaryDiagnosis
     },
     {
@@ -109,7 +118,7 @@ export const healthDetailsQuestions = [
             if (!formData.neoplasmsOfOrgan) return [];
             return neoplasmsOfRegionMap[formData.neoplasmsOfOrgan] || [];
         },
-        required: true,
+        required: false,
         showIf: (formData) => !!formData.neoplasmsOfOrgan
     },
     {
@@ -160,7 +169,7 @@ export const healthDetailsQuestions = [
             'Stage-IV Metastatic'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'priorSurgery',
@@ -168,7 +177,7 @@ export const healthDetailsQuestions = [
         type: 'select',
         options: ['Yes', 'No'],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'surgeryTiming',
@@ -182,12 +191,12 @@ export const healthDetailsQuestions = [
             'More Than 1 Year'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.priorSurgery === 'Yes'
+        showIf: (formData) => !!formData.patientType && formData.priorSurgery === 'Yes'
     },
     {
         id: 'typeOfTreatment',
         label: 'Type of treatment',
-        type: 'select',
+        type: 'multi-select-dropdown',
         options: [
             'Chemotherapy',
             'Radiotherapy',
@@ -202,7 +211,7 @@ export const healthDetailsQuestions = [
             'Hyperthermia (HIPEC)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
         id: 'chemotherapyScheme',
@@ -218,7 +227,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy')
     },
     {
         id: 'chemotherapySchemeOther',
@@ -226,7 +235,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyScheme === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy') && formData.chemotherapyScheme === 'Other (Text Box)'
     },
     {
         id: 'chemotherapyLine',
@@ -239,7 +248,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy')
     },
     {
         id: 'chemotherapyLineOther',
@@ -247,7 +256,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyLine === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy') && formData.chemotherapyLine === 'Other (Text Box)'
     },
     {
         id: 'performanceStatusScale',
@@ -255,27 +264,84 @@ export const healthDetailsQuestions = [
         type: 'checkbox-group',
         options: ['Ecog Scale', 'Karnofsky Scale'],
         required: true,
-        showIf: (formData) => !!formData.dateOfAdmission
+        showIf: (formData) => !!formData.patientType
     },
     {
-        id: 'ecogScaleValue',
-        label: 'Ecog Scale',
+        id: 'ecogDescription',
+        label: 'ECOG Performance Description',
         type: 'radio-group',
-        options: ['Grade 0', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'],
+        options: [
+            'Fully active able to carry on all pre disease performance',
+            'Restricted in physically strenuous activity but ambulatory',
+            'Capable of only limited self care confined to bed or chair <50%',
+            'Capable of only limited self care confined to bed or chair >50%',
+            'Completely disabled cannot carry on any self care',
+            'Dead'
+        ],
         required: true,
         showIf: (formData) => formData.performanceStatusScale?.includes('Ecog Scale')
     },
     {
-        id: 'karnofskyScaleValue',
-        label: 'Karnofsky scale',
-        type: 'range',
-        min: 0,
-        max: 100,
-        step: 10,
-        minLabel: '0 Min',
-        maxLabel: '100 Max',
+        id: 'ecogScaleValue',
+        label: 'ECOG Score',
+        type: 'number',
+        readOnly: true,
+        showIf: (formData) => formData.performanceStatusScale?.includes('Ecog Scale') && formData.ecogScaleValue !== undefined
+    },
+    {
+        id: 'karnofskyCategory',
+        label: 'Karnofsky Category',
+        type: 'radio-group',
+        options: [
+            'Able to carry on normal activity and work',
+            'Unable to work but able to live at home',
+            'Unable to care for self'
+        ],
         required: true,
         showIf: (formData) => formData.performanceStatusScale?.includes('Karnofsky Scale')
+    },
+    {
+        id: 'karnofskyDescription',
+        label: 'Karnofsky Description',
+        type: 'radio-group',
+        options: (formData) => {
+            if (formData.karnofskyCategory === 'Able to carry on normal activity and work') {
+                return [
+                    'Normal with no complaints',
+                    'Able to carry on normal activity',
+                    'Normal activity with effort'
+                ];
+            }
+
+            if (formData.karnofskyCategory === 'Unable to work but able to live at home') {
+                return [
+                    'Cares for self but unable to work',
+                    'Requires occasional assistance',
+                    'Requires considerable assistance'
+                ];
+            }
+
+            if (formData.karnofskyCategory === 'Unable to care for self') {
+                return [
+                    'Disabled requires special care',
+                    'Severely disabled hospital admission indicated',
+                    'Very sick hospital admission necessary',
+                    'Moribund fatal processes progressing rapidly',
+                    'Dead'
+                ];
+            }
+
+            return [];
+        },
+        required: true,
+        showIf: (formData) => formData.performanceStatusScale?.includes('Karnofsky Scale') && !!formData.karnofskyCategory
+    },
+    {
+        id: 'karnofskyScaleValue',
+        label: 'Karnofsky Score',
+        type: 'number',
+        readOnly: true,
+        showIf: (formData) => formData.performanceStatusScale?.includes('Karnofsky Scale') && formData.karnofskyScaleValue !== undefined
     }
 ];
 

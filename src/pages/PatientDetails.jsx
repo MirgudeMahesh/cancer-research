@@ -139,6 +139,7 @@ function PatientDetails() {
 
                                             // Handle special types or missing values
                                             if (value === null || value === undefined || value === '') return 'N/A';
+                                            if (Array.isArray(value)) return value.join(', ');
                                             return `${value}${unit}`;
                                         })()}
                                     </div>

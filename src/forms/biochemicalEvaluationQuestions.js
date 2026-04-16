@@ -5,7 +5,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'g/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 2,
+        max: 22
     },
     {
         id: 'leucocytes',
@@ -13,15 +15,19 @@ const baseQuestions = [
         type: 'number',
         unit: 'Cells/µL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 500,
+        max: 300000
     },
     {
         id: 'lymphocytesTotal',
         label: 'Lymphocytes (Total Count)',
         type: 'number',
-        unit: 'µL',
+        unit: 'cells/µL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 100,
+        max: 100000
     },
     {
         id: 'lymphocytesPercent',
@@ -29,23 +35,29 @@ const baseQuestions = [
         type: 'number',
         unit: '%',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0,
+        max: 100
     },
     {
         id: 'neutrophils',
         label: 'Neutrophils',
         type: 'number',
-        unit: 'µL',
+        unit: 'cells/µL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0,
+        max: 200000
     },
     {
         id: 'platelets',
         label: 'Platelets',
         type: 'number',
-        unit: 'µL',
+        unit: 'cells/µL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 5000,
+        max: 2000000
     },
     {
         id: 'rdw',
@@ -53,7 +65,9 @@ const baseQuestions = [
         type: 'number',
         unit: '%',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 8,
+        max: 30
     },
     {
         id: 'mcv',
@@ -61,7 +75,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'fL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 50,
+        max: 130
     },
     {
         id: 'glucose',
@@ -69,7 +85,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 20,
+        max: 1000
     },
     {
         id: 'triglycerides',
@@ -77,7 +95,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mmol/L',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0.1,
+        max: 30
     },
     {
         id: 'cholesterol',
@@ -85,7 +105,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 50,
+        max: 1000
     },
     {
         id: 'albumin',
@@ -93,7 +115,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'g/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0.5,
+        max: 6.5
     },
     {
         id: 'prealbumin',
@@ -101,7 +125,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 2,
+        max: 80
     },
     {
         id: 'creatinine',
@@ -109,7 +135,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0.1,
+        max: 20
     },
     {
         id: 'hba1c',
@@ -117,7 +145,9 @@ const baseQuestions = [
         type: 'number',
         unit: '%',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 3,
+        max: 20
     },
     {
         id: 'bun',
@@ -125,7 +155,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/dL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 2,
+        max: 200
     },
     {
         id: 'crp',
@@ -133,7 +165,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'mg/L',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0,
+        max: 500
     },
     {
         id: 'alkalinePhosphatase',
@@ -141,15 +175,19 @@ const baseQuestions = [
         type: 'number',
         unit: 'IU/L',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 10,
+        max: 3000
     },
     {
         id: 'urineNitrogen',
         label: 'Urine Nitrogen 24hrs',
         type: 'number',
-        unit: 'gms',
+        unit: 'g/day',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 0,
+        max: 50
     },
     {
         id: 'vitaminD',
@@ -157,7 +195,9 @@ const baseQuestions = [
         type: 'number',
         unit: 'ng/mL',
         placeholder: 'Enter value',
-        required: false
+        required: false,
+        min: 2,
+        max: 200
     }
 ];
 

@@ -1,3 +1,4 @@
+import { COUNTRIES } from "./countries";
 export const personalDetailsQuestions = [
     {
         id: 'patientId',
@@ -6,12 +7,13 @@ export const personalDetailsQuestions = [
         placeholder: 'Enter Patient ID',
         required: true
     },
+
     {
         id: 'firstName',
         label: 'First Name',
         type: 'text',
         placeholder: 'Enter first name',
-        required: false
+        required: true
     },
     {
         id: 'lastName',
@@ -31,20 +33,21 @@ export const personalDetailsQuestions = [
         label: 'Patient Date of Birth',
         type: 'date',
         placeholder: 'dd-MMM-yyyy',
-        required: true,
+        required: false,
         // info: 'Please Mention Patient Date of Birth'
     },
     {
         id: 'chronologicalAge',
         label: 'Chronological Age',
         type: 'age',
-        required: false
+        maxYears: 100,
+        required: true
     },
     {
         id: 'gender',
         label: 'Gender',
         type: 'select',
-        options: ['Male', 'Female', 'Other', 'Prefer not to say'],
+        options: ['Male', 'Female', 'Other'],
         required: true
     },
     {
@@ -57,8 +60,8 @@ export const personalDetailsQuestions = [
     {
         id: 'country',
         label: 'Country',
-        type: 'text',
-        placeholder: 'Enter Country',
-        required: false
+        type: 'select',
+        options: COUNTRIES,
+        required: true
     }
 ];

@@ -6,19 +6,172 @@ import { personalDetailsQuestions } from '../forms/personalDetailsQuestions';
 import { healthDetailsQuestions } from '../forms/healthDetailsQuestions';
 import { backgroundDetailsQuestions } from '../forms/backgroundDetailsQuestions';
 import { nutritionInterventionQuestions } from '../forms/nutritionInterventionQuestions';
-import { anthropometricQuestions } from '../forms/anthropometricQuestions';
 import { biochemicalEvaluationQuestions } from '../forms/biochemicalEvaluationQuestions';
 import { nutritionMonitoringQuestions } from '../forms/nutritionMonitoringQuestions';
+import { neoplasmsOfOrganMap, neoplasmsOfRegionMap } from '../data/diagnosisData';
 
 const STEPS = [
     { id: 1, name: 'Personal', section: 'personalDetails', questions: personalDetailsQuestions },
     { id: 2, name: 'History', section: 'healthDetails', questions: healthDetailsQuestions },
     { id: 3, name: 'Assessment', section: 'backgroundDetails', questions: backgroundDetailsQuestions },
     { id: 4, name: 'Intervention', section: 'nutritionIntervention', questions: nutritionInterventionQuestions },
-    { id: 5, name: 'Anthropometric', section: 'anthropometric', questions: anthropometricQuestions },
-    { id: 6, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions },
-    { id: 7, name: 'Monitoring', section: 'nutritionMonitoring', questions: nutritionMonitoringQuestions }
+    { id: 5, name: 'Evaluation', section: 'miscellaneous', questions: biochemicalEvaluationQuestions },
+    { id: 6, name: 'Monitoring', section: 'nutritionMonitoring', questions: nutritionMonitoringQuestions }
 ];
+
+
+
+
+
+
+//calculate age
+const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let years = today.getFullYear() - birthDate.getFullYear();
+    let months = today.getMonth() - birthDate.getMonth();
+    let days = today.getDate() - birthDate.getDate();
+
+    if (days < 0) {
+        months--;
+        const prevMonthDays = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            0
+        ).getDate();
+        days += prevMonthDays;
+    }
+
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    return {
+        years: years >= 0 ? years : 0,
+        months: months >= 0 ? months : 0,
+        days: days >= 0 ? days : 0
+    };
+};
+
+// calculate dob from age
+const calculateDobFromAge = (age) => {
+    if (!age || (!age.years && !age.months && !age.days)) return '';
+
+    const today = new Date();
+    const dob = new Date(today);
+
+    dob.setFullYear(today.getFullYear() - (parseInt(age.years) || 0));
+    dob.setMonth(today.getMonth() - (parseInt(age.months) || 0));
+    dob.setDate(today.getDate() - (parseInt(age.days) || 0));
+
+    return dob.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+};
+
+
+
+const MultiSelectDropdown = ({ question, value, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectedValues = Array.isArray(value) ? value : [];
+
+    const handleCheckboxChange = (optionValue) => {
+        const newValue = selectedValues.includes(optionValue)
+            ? selectedValues.filter(v => v !== optionValue)
+            : [...selectedValues, optionValue];
+        onChange(question.id, newValue);
+    };
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className="form-select"
+                style={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    minHeight: '45px',
+                    background: '#ffffff',
+                    position: 'relative'
+                }}
+            >
+                <span style={{ 
+                    color: selectedValues.length > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    paddingRight: '20px'
+                }}>
+                    {selectedValues.length > 0 
+                        ? selectedValues.join(', ') 
+                        : `Select ${question.label}`}
+                </span>
+                <span style={{
+                    border: 'solid var(--text-muted)',
+                    borderWidth: '0 2px 2px 0',
+                    display: 'inline-block',
+                    padding: '3px',
+                    transform: isOpen ? 'rotate(-135deg)' : 'rotate(45deg)',
+                    transition: 'transform 0.2s',
+                    marginRight: '5px'
+                }}></span>
+            </div>
+
+            {isOpen && (
+                <>
+                    <div 
+                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }} 
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 'var(--radius-md)',
+                        marginTop: '4px',
+                        boxShadow: 'var(--shadow-lg)',
+                        zIndex: 101,
+                        maxHeight: '250px',
+                        overflowY: 'auto',
+                        padding: '0.5rem'
+                    }}>
+                        {question.options.map(option => (
+                            <label key={option} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem',
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                color: 'var(--text-primary)',
+                                borderRadius: 'var(--radius-sm)',
+                                transition: 'background 0.2s'
+                            }}
+                            className="dropdown-item-hover"
+                            onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedValues.includes(option)}
+                                    onChange={() => handleCheckboxChange(option)}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary-color)' }}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                                {option}
+                            </label>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 function AddPatient() {
     const navigate = useNavigate();
@@ -45,11 +198,101 @@ function AddPatient() {
     const currentStepData = STEPS.find(s => s.id === currentStep);
 
     const handleInputChange = (questionId, value) => {
+        // Prevent future dates
+        const question = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions].find(q => q.id === questionId);
+
+        if (question?.type === 'date' && value) {
+            const selectedDate = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Compare dates only
+
+            if (selectedDate > today) {
+                alert('Future dates are not allowed.');
+                return;
+            }
+        }
+
         let updatedData = {
             ...formData,
             [questionId]: value
         };
 
+        if (questionId === 'karnofskyDescription') {
+            const scoreMap = {
+                'Normal with no complaints': 100,
+                'Able to carry on normal activity': 90,
+                'Normal activity with effort': 80,
+                'Cares for self but unable to work': 70,
+                'Requires occasional assistance': 60,
+                'Requires considerable assistance': 50,
+                'Disabled requires special care': 40,
+                'Severely disabled hospital admission indicated': 30,
+                'Very sick hospital admission necessary': 20,
+                'Moribund fatal processes progressing rapidly': 10,
+                'Dead': 0
+            };
+
+            updatedData.karnofskyScaleValue = scoreMap[value];
+        }
+
+        if (questionId === 'ecogDescription') {
+            const ecogMap = {
+                'Fully active able to carry on all pre disease performance': 0,
+                'Restricted in physically strenuous activity but ambulatory': 1,
+                'Capable of only limited self care confined to bed or chair <50%': 2,
+                'Capable of only limited self care confined to bed or chair >50%': 3,
+                'Completely disabled cannot carry on any self care': 4,
+                'Dead': 5
+            };
+
+            updatedData.ecogScaleValue = ecogMap[value];
+        }
+
+        if (questionId === 'karnofskyCategory') {
+            updatedData.karnofskyDescription = '';
+            updatedData.karnofskyScaleValue = undefined;
+        }
+
+        // Auto-calculate chronological age from Date of Birth
+        if (questionId === 'dateOfBirth' && value) {
+            const age = calculateAge(value);
+            updatedData.chronologicalAge = age;
+        }
+
+        // Auto-calculate Date of Birth from Chronological Age
+        if (questionId === 'chronologicalAge' && value) {
+            const dob = calculateDobFromAge(value);
+            if (dob) {
+                updatedData.dateOfBirth = dob;
+            }
+        }
+
+        // Interlinked Diagnostic Fields: Primary Diagnosis -> Organ -> Region
+        if (questionId === 'primaryDiagnosis' && value) {
+            const rangeKey = Object.keys(neoplasmsOfOrganMap).find(k => value.startsWith(k));
+            if (rangeKey && neoplasmsOfOrganMap[rangeKey]?.length > 0) {
+                const firstOrgan = neoplasmsOfOrganMap[rangeKey][0];
+                updatedData.neoplasmsOfOrgan = firstOrgan;
+
+                if (neoplasmsOfRegionMap[firstOrgan]?.length > 0) {
+                    updatedData.neoplasmsOfRegion = neoplasmsOfRegionMap[firstOrgan][0];
+                } else {
+                    updatedData.neoplasmsOfRegion = '';
+                }
+            } else {
+                updatedData.neoplasmsOfOrgan = '';
+                updatedData.neoplasmsOfRegion = '';
+            }
+        }
+
+        // Interlinked Diagnostic Fields: Organ -> Region
+        if (questionId === 'neoplasmsOfOrgan' && value) {
+            if (neoplasmsOfRegionMap[value]?.length > 0) {
+                updatedData.neoplasmsOfRegion = neoplasmsOfRegionMap[value][0];
+            } else {
+                updatedData.neoplasmsOfRegion = '';
+            }
+        }
         // Auto-calculate hospital stay length if discharge date or mortality status changes
         if ((questionId === 'hospitalDischargeDate' && value) || (questionId === 'mortality' && value === 'Yes')) {
             const admissionDateStr = currentPatientForm.healthDetails?.dateOfAdmission;
@@ -113,7 +356,23 @@ function AddPatient() {
         }, 2000);
     };
 
-    const getMissingFields = (stepId) => {
+    const isOutOfRange = (question, val) => {
+        if (!val) return false;
+        if (question.type === 'number') {
+            const num = parseFloat(val);
+            if (question.min !== undefined && num < question.min) return true;
+            if (question.max !== undefined && num > question.max) return true;
+        }
+        if (question.type === 'age') {
+            const years = parseInt(val.years) || 0;
+            if (question.maxYears !== undefined && years > question.maxYears) return true;
+            if (val.months !== undefined && parseInt(val.months) > 11) return true;
+            if (val.days !== undefined && parseInt(val.days) > 30) return true;
+        }
+        return false;
+    };
+
+    const getInvalidFields = (stepId) => {
         const step = STEPS.find(s => s.id === stepId);
         if (!step) return [];
 
@@ -121,30 +380,29 @@ function AddPatient() {
 
         return step.questions
             .filter(q => {
-                if (q.showIf) return q.showIf(data);
-                return true;
-            })
-            .filter(q => {
-                if (!q.required) return false;
+                const isShown = q.showIf ? q.showIf(data) : true;
+                if (!isShown) return false;
+                
                 const val = data[q.id];
-                if (q.type === 'age') {
-                    return !(val && (val.years || val.months || val.days));
-                }
-                if (q.type === 'checkbox-group') {
-                    return !(Array.isArray(val) && val.length > 0);
-                }
-                if (typeof val === 'string') return val.trim() === '';
-                if (q.type === 'number') return val === undefined || val === null || val === '';
-                if (q.type === 'dynamic-days') {
-                    const days = val || [{ energy: '', protein: '' }];
-                    return days.some(d => !d.energy || !d.protein);
-                }
-                return !val;
+                
+                // Check if missing
+                const isMissing = q.required && (
+                    q.type === 'age'
+                        ? !(val && (val.years || val.months || val.days))
+                        : q.type === 'checkbox-group'
+                            ? !(Array.isArray(val) && val.length > 0)
+                            : !val || (typeof val === 'string' && val.trim() === '')
+                );
+                
+                if (isMissing) return true;
+                
+                // Check if out of range
+                return isOutOfRange(q, val);
             });
     };
 
     const validateStep = (id) => {
-        return getMissingFields(id).length === 0;
+        return getInvalidFields(id).length === 0;
     };
 
     const canAccessStep = (targetStepId) => {
@@ -160,16 +418,40 @@ function AddPatient() {
 
     const handleNext = () => {
         if (submittingAction) return;
-        const missing = getMissingFields(currentStep);
-        if (missing.length > 0) {
+
+        // Custom validation for Medical History step
+        if (currentStep === 2) {
+            const data = { ...currentPatientForm.data, ...formData };
+            if (data.dateOfBirth && data.initialCancerDiagnosis) {
+                if (new Date(data.initialCancerDiagnosis) <= new Date(data.dateOfBirth)) {
+                    alert('Initial Cancer Diagnosis must be after Date of Birth.');
+                    return;
+                }
+            }
+            if (data.dateOfBirth && data.firstCancerTherapy) {
+                if (new Date(data.firstCancerTherapy) <= new Date(data.dateOfBirth)) {
+                    alert('First Cancer Therapy Initiated must be after Date of Birth.');
+                    return;
+                }
+            }
+            if (data.initialCancerDiagnosis && data.firstCancerTherapy) {
+                if (new Date(data.firstCancerTherapy) <= new Date(data.initialCancerDiagnosis)) {
+                    alert('First Cancer Therapy Initiated must be after Initial Cancer Diagnosis.');
+                    return;
+                }
+            }
+        }
+
+        const invalid = getInvalidFields(currentStep);
+        if (invalid.length > 0) {
             // Mark all current fields as touched to show red highlights
             const newTouched = {};
             currentStepData.questions.forEach(q => newTouched[q.id] = true);
             setTouchedFields(newTouched);
-
+ 
             // Scroll to first invalid field
             setTimeout(() => {
-                const element = document.getElementById(`field-group-${missing[0].id}`);
+                const element = document.getElementById(`field-group-${invalid[0].id}`);
                 if (element) {
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -196,13 +478,26 @@ function AddPatient() {
 
 
     const handleStepClick = (stepId) => {
-        if (!canAccessStep(stepId)) {
-            return;
-        }
+        if (submittingAction) return;
 
-        saveFormProgress(currentStepData.section, formData);
-        setCurrentStep(stepId);
-        setTouchedFields({});
+        if (canAccessStep(stepId)) {
+            saveFormProgress(currentStepData.section, formData);
+            setCurrentStep(stepId);
+            setTouchedFields({});
+        } else {
+            // Find the first invalid step
+            for (let i = 1; i < stepId; i++) {
+                if (!validateStep(i)) {
+                    const invalidFields = getInvalidFields(i);
+                    alert(`Step ${i} is incomplete or has invalid values. Please fix them before proceeding.`);
+                    setCurrentStep(i);
+                    const newTouched = {};
+                    STEPS.find(s => s.id === i).questions.forEach(q => newTouched[q.id] = true);
+                    setTouchedFields(newTouched);
+                    return;
+                }
+            }
+        }
     };
 
 
@@ -291,6 +586,8 @@ function AddPatient() {
                             onChange={(e) => handleAgeChange('years', e.target.value)}
                             onWheel={(e) => e.target.blur()}
                             placeholder="0"
+                            min="0"
+                            max={question.maxYears}
                         />
                     </div>
                     <div className="form-group">
@@ -302,6 +599,8 @@ function AddPatient() {
                             onChange={(e) => handleAgeChange('months', e.target.value)}
                             onWheel={(e) => e.target.blur()}
                             placeholder="0"
+                            min="0"
+                            max="11"
                         />
                     </div>
                     <div className="form-group">
@@ -313,6 +612,8 @@ function AddPatient() {
                             onChange={(e) => handleAgeChange('days', e.target.value)}
                             onWheel={(e) => e.target.blur()}
                             placeholder="0"
+                            min="0"
+                            max="30"
                         />
                     </div>
                 </div>
@@ -357,6 +658,7 @@ function AddPatient() {
 
         if (question.type === 'checkbox-group') {
             const selectedValues = Array.isArray(value) ? value : [];
+            const options = typeof question.options === 'function' ? question.options(formData) : question.options;
             const handleCheckboxChange = (optionValue) => {
                 const newValue = selectedValues.includes(optionValue)
                     ? selectedValues.filter(v => v !== optionValue)
@@ -366,7 +668,7 @@ function AddPatient() {
 
             return (
                 <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
-                    {question.options.map(option => (
+                    {options?.map(option => (
                         <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
                             <input
                                 type="checkbox"
@@ -382,9 +684,10 @@ function AddPatient() {
         }
 
         if (question.type === 'radio-group') {
+            const options = typeof question.options === 'function' ? question.options(formData) : question.options;
             return (
                 <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
-                    {question.options.map(option => (
+                    {options?.map(option => (
                         <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
                             <input
                                 type="radio"
@@ -431,6 +734,16 @@ function AddPatient() {
                     value={value}
                     onChange={(e) => handleInputChange(question.id, e.target.value)}
                     required={question.required}
+                />
+            );
+        }
+
+        if (question.type === 'multi-select-dropdown') {
+            return (
+                <MultiSelectDropdown 
+                    question={question} 
+                    value={value} 
+                    onChange={handleInputChange} 
                 />
             );
         }
@@ -530,6 +843,8 @@ function AddPatient() {
                     onWheel={(e) => question.type === 'number' && e.target.blur()}
                     required={question.required}
                     readOnly={question.readOnly}
+                    min={question.min}
+                    max={question.type === 'date' ? new Date().toISOString().split('T')[0] : question.max}
                     style={{ flex: 1, backgroundColor: question.readOnly ? '#f8fafc' : 'white' }}
                 />
                 {question.unit && (
@@ -632,7 +947,6 @@ function AddPatient() {
                         {renderReviewSection('healthDetails', 'Medical History')}
                         {renderReviewSection('backgroundDetails', 'Dietetic Assessment')}
                         {renderReviewSection('nutritionIntervention', 'Nutrition Interventional Plans')}
-                        {renderReviewSection('anthropometric', 'Anthropometric & Strength Evaluation')}
                         {renderReviewSection('miscellaneous', 'Biochemical Evaluation')}
                         {renderReviewSection('nutritionMonitoring', 'Nutrition Monitoring')}
 
@@ -641,14 +955,13 @@ function AddPatient() {
                                 onClick={() => {
                                     if (submittingAction) return;
                                     // Final validation before actual adding
-                                    const firstInvalidStep = STEPS.find(step => getMissingFields(step.id).length > 0);
+                                    const firstInvalidStep = STEPS.find(step => getInvalidFields(step.id).length > 0);
 
                                     if (!firstInvalidStep) {
                                         handleAddPatient(currentPatientForm);
                                     } else {
-
                                         // Redirect to the first invalid step and show highlights
-                                        const missingFields = getMissingFields(firstInvalidStep.id);
+                                        const invalidFields = getInvalidFields(firstInvalidStep.id);
                                         setCurrentStep(firstInvalidStep.id);
                                         setShowReview(false);
                                         // formData is automatically synced with currentPatientForm.data via useEffect
@@ -659,7 +972,7 @@ function AddPatient() {
 
                                         // Scroll after render
                                         setTimeout(() => {
-                                            const element = document.getElementById(`field-group-${missingFields[0].id}`);
+                                            const element = document.getElementById(`field-group-${invalidFields[0].id}`);
                                             if (element) {
                                                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                             }
@@ -772,14 +1085,17 @@ function AddPatient() {
                                     );
                                 }
 
+                                const val = formData[question.id];
                                 const isMissing = question.required && (
                                     question.type === 'age'
-                                        ? !(formData[question.id] && (formData[question.id].years || formData[question.id].months || formData[question.id].days))
+                                        ? !(val && (val.years || val.months || val.days))
                                         : question.type === 'checkbox-group'
-                                            ? !(Array.isArray(formData[question.id]) && formData[question.id].length > 0)
-                                            : !formData[question.id] || (typeof formData[question.id] === 'string' && formData[question.id].trim() === '')
+                                            ? !(Array.isArray(val) && val.length > 0)
+                                            : !val || (typeof val === 'string' && val.trim() === '')
                                 );
-                                const showError = touchedFields[question.id] && isMissing;
+                                
+                                const outOfRange = isOutOfRange(question, val);
+                                const showError = touchedFields[question.id] && (isMissing || outOfRange);
 
                                 return (
                                     <div
@@ -791,10 +1107,19 @@ function AddPatient() {
                                         <label htmlFor={question.id} className="form-label" style={showError ? { color: 'var(--danger-color)' } : {}}>
                                             {question.label} {question.required && <span style={{ color: 'var(--danger-color)' }}>*</span>}
                                         </label>
+                                        {showError && (
+                                            <div style={{ color: 'var(--danger-color)', fontSize: '0.75rem', marginBottom: '0.5rem', fontWeight: '600' }}>
+                                                {isMissing ? 'This field is required' : ''}
+                                                {outOfRange ? (
+                                                    question.type === 'age' 
+                                                        ? `Range: Max ${question.maxYears} Years, 11 Months, 30 Days`
+                                                        : `Range: ${question.min || 0} - ${question.max} ${question.unit || ''}`
+                                                ) : ''}
+                                            </div>
+                                        )}
                                         <div className={showError ? 'field-error' : ''}>
                                             {renderQuestion(question)}
                                         </div>
-                                        {showError && <p style={{ color: 'var(--danger-color)', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: '500' }}>This field is mandatory</p>}
                                     </div>
                                 );
                             })}
