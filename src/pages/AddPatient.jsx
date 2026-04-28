@@ -70,6 +70,21 @@ const calculateDobFromAge = (age) => {
 
 
 
+// Returns today's date as a local YYYY-MM-DD string (avoids UTC timezone shift)
+const localTodayStr = () => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+// Parses a YYYY-MM-DD string as a LOCAL date (not UTC) to avoid timezone issues
+const parseLocalDate = (dateStr) => {
+    const [y, m, day] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, day);
+};
+
 function AddPatient() {
     const navigate = useNavigate();
     const { logout } = useAuth();
@@ -99,9 +114,10 @@ function AddPatient() {
         const question = [...personalDetailsQuestions, ...healthDetailsQuestions, ...backgroundDetailsQuestions, ...nutritionInterventionQuestions, ...biochemicalEvaluationQuestions, ...nutritionMonitoringQuestions].find(q => q.id === questionId);
 
         if (question?.type === 'date' && value) {
-            const selectedDate = new Date(value);
+            // Parse both as local dates to avoid UTC-vs-local timezone mismatch
+            const selectedDate = parseLocalDate(value);
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Compare dates only
+            today.setHours(0, 0, 0, 0);
 
             if (selectedDate > today) {
                 alert('Future dates are not allowed.');
@@ -609,7 +625,7 @@ function AddPatient() {
                                         className="form-input"
                                         value={day.date || ''}
                                         onChange={(e) => updateDay(index, 'date', e.target.value)}
-                                        max={new Date().toISOString().split('T')[0]} // Prevent future dates? User didn't specify, but good practice.
+                                        max={localTodayStr()}
                                         required
                                         style={{ maxWidth: '200px' }}
                                     />
@@ -707,7 +723,7 @@ function AddPatient() {
                     onWheel={(e) => question.type === 'number' && e.target.blur()}
                     required={question.required}
                     readOnly={question.readOnly}
-                    max={question.type === 'date' ? new Date().toISOString().split('T')[0] : undefined}
+                    max={question.type === 'date' ? localTodayStr() : undefined}
                     style={{ flex: 1, backgroundColor: question.readOnly ? '#f8fafc' : 'white' }}
                 />
                 {question.unit && (
