@@ -199,7 +199,7 @@ export const healthDetailsQuestions = [
     {
         id: 'typeOfTreatment',
         label: 'Type of treatment',
-        type: 'select',
+        type: 'checkbox-group',
         options: [
             'Chemotherapy',
             'Radiotherapy',
@@ -230,7 +230,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy')
     },
     {
         id: 'chemotherapySchemeOther',
@@ -238,7 +238,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyScheme === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy') && formData.chemotherapyScheme === 'Other (Text Box)'
     },
     {
         id: 'chemotherapyLine',
@@ -251,7 +251,7 @@ export const healthDetailsQuestions = [
             'Other (Text Box)'
         ],
         required: true,
-        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy')
     },
     {
         id: 'chemotherapyLineOther',
@@ -259,7 +259,7 @@ export const healthDetailsQuestions = [
         type: 'text',
         placeholder: 'Please specify...',
         required: true,
-        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment === 'Chemotherapy' && formData.chemotherapyLine === 'Other (Text Box)'
+        showIf: (formData) => !!formData.patientType && formData.typeOfTreatment?.includes('Chemotherapy') && formData.chemotherapyLine === 'Other (Text Box)'
     },
     {
         id: 'performanceStatusScale',

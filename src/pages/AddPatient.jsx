@@ -777,9 +777,11 @@ function AddPatient() {
                                         {typeof question.label === 'function' ? question.label(data) : question.label}:
                                     </span>
                                     <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-                                        {typeof value === 'object' && value !== null
-                                            ? `${value.years || 0}y ${value.months || 0}m ${value.days || 0}d`
-                                            : `${value || 'N/A'}${value ? unit : ''}`}
+                                        {Array.isArray(value)
+                                            ? value.join(', ')
+                                            : typeof value === 'object' && value !== null
+                                                ? `${value.years || 0}y ${value.months || 0}m ${value.days || 0}d`
+                                                : `${value || 'N/A'}${value ? unit : ''}`}
                                     </span>
                                 </div>
                             );
