@@ -273,21 +273,64 @@ export const healthDetailsQuestions = [
         id: 'ecogScaleValue',
         label: 'Ecog Scale',
         type: 'radio-group',
-        options: ['Grade 0', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'],
+        vertical: true,
+        options: [
+            { value: 'Grade 0', label: 'Fully active, able to carry on all pre-disease performance without restriction.' },
+            { value: 'Grade 1', label: 'Restricted in physically strenuous activity but ambulatory and able to carry out work of a light or sedentary nature, e.g., light house work, office work.' },
+            { value: 'Grade 2', label: 'Capable of all self-care but unable to carry out any work activities; up and about more than 50% of waking hours.' },
+            { value: 'Grade 3', label: 'Capable of only limited self-care, confined to bed or chair more than 50% of waking hours.' },
+            { value: 'Grade 4', label: 'Completely disabled. Cannot carry on any self-care. Totally confined to bed or chair.' },
+            { value: 'Grade 5', label: 'Dead' }
+        ],
         required: true,
         showIf: (formData) => formData.performanceStatusScale?.includes('Ecog Scale')
     },
     {
-        id: 'karnofskyScaleValue',
-        label: 'Karnofsky scale',
-        type: 'range',
-        min: 0,
-        max: 100,
-        step: 10,
-        minLabel: '0 Min',
-        maxLabel: '100 Max',
+        id: 'karnofskyCategory',
+        label: 'Karnofsky Scale Category',
+        type: 'radio-group',
+        vertical: true,
+        options: [
+            { value: 'cat1', label: 'Able to carry on normal activity and to work; no special care needed.' },
+            { value: 'cat2', label: 'Unable to work; able to live at home and care for most personal needs; varying amount of assistance needed.' },
+            { value: 'cat3', label: 'Unable to care for self; requires equivalent of institutional or hospital care; disease may be progressing rapidly.' }
+        ],
         required: true,
         showIf: (formData) => formData.performanceStatusScale?.includes('Karnofsky Scale')
+    },
+    {
+        id: 'karnofskyScaleValue',
+        label: 'Karnofsky Score Details',
+        type: 'radio-group',
+        vertical: true,
+        options: (formData) => {
+            if (formData.karnofskyCategory === 'cat1') {
+                return [
+                    { value: 100, label: '100 - Normal with no complaints; no evidence of disease.' },
+                    { value: 90, label: '90 - Able to carry on normal activity; minor signs or symptoms of disease.' },
+                    { value: 80, label: '80 - Normal activity with effort; some signs and symptoms of disease.' }
+                ];
+            }
+            if (formData.karnofskyCategory === 'cat2') {
+                return [
+                    { value: 70, label: '70 - Cares for self; unable to carry on normal activity or do active work.' },
+                    { value: 60, label: '60 - Requires occasional assistance, but able to care for most of his/her personal needs.' },
+                    { value: 50, label: '50 - Requires considerable assistance and frequent medical care.' }
+                ];
+            }
+            if (formData.karnofskyCategory === 'cat3') {
+                return [
+                    { value: 40, label: '40 - Disabled; requires special care and assistance.' },
+                    { value: 30, label: '30 - Severely disabled; hospital admission is indicated although death is not imminent.' },
+                    { value: 20, label: '20 - Very sick; hospital admission necessary; active supportive treatment necessary.' },
+                    { value: 10, label: '10 - Moribund; fatal processes progressing rapidly.' },
+                    { value: 0, label: '0 - Dead' }
+                ];
+            }
+            return [];
+        },
+        required: true,
+        showIf: (formData) => formData.performanceStatusScale?.includes('Karnofsky Scale') && !!formData.karnofskyCategory
     }
 ];
 

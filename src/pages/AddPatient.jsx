@@ -431,7 +431,7 @@ function AddPatient() {
                         id={question.id}
                         className="form-select"
                         value={value}
-                        onChange={(e) => handleInputChange(question.id, e.target.value)}
+                        onChange={(e) => handleInputChange(question.id, question.isNumber ? Number(e.target.value) : e.target.value)}
                         required={question.required}
                     >
                         <option value="">Select {question.label}</option>
@@ -443,16 +443,20 @@ function AddPatient() {
                             if (question.groups) {
                                 return question.groups.map(group => (
                                     <optgroup key={group.label} label={group.label}>
-                                        {group.options.map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
+                                        {group.options.map(option => {
+                                            const optValue = typeof option === 'object' ? option.value : option;
+                                            const optLabel = typeof option === 'object' ? option.label : option;
+                                            return <option key={optValue} value={optValue}>{optLabel}</option>;
+                                        })}
                                     </optgroup>
                                 ));
                             }
 
-                            return options?.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ));
+                            return options?.map(option => {
+                                const optValue = typeof option === 'object' ? option.value : option;
+                                const optLabel = typeof option === 'object' ? option.label : option;
+                                return <option key={optValue} value={optValue}>{optLabel}</option>;
+                            });
                         })()}
                     </select>
                     {renderImage()}
@@ -487,20 +491,25 @@ function AddPatient() {
         }
 
         if (question.type === 'radio-group') {
+            const options = typeof question.options === 'function' ? question.options(formData) : question.options;
             return (
-                <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
-                    {question.options.map(option => (
-                        <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
-                            <input
-                                type="radio"
-                                name={question.id}
-                                checked={value === option}
-                                onChange={() => handleInputChange(question.id, option)}
-                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                            />
-                            {option}
-                        </label>
-                    ))}
+                <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', paddingTop: '0.5rem', flexDirection: question.vertical ? 'column' : 'row' }}>
+                    {options?.map(option => {
+                        const optValue = typeof option === 'object' ? option.value : option;
+                        const optLabel = typeof option === 'object' ? option.label : option;
+                        return (
+                            <label key={optValue} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                                <input
+                                    type="radio"
+                                    name={question.id}
+                                    checked={value === optValue}
+                                    onChange={() => handleInputChange(question.id, optValue)}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', flexShrink: 0 }}
+                                />
+                                {optLabel}
+                            </label>
+                        );
+                    })}
                 </div>
             );
         }

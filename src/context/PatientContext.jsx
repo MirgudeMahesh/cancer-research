@@ -84,6 +84,11 @@ export const PatientProvider = ({ children }) => {
             status: status
         };
 
+        // Remove UI-only helper fields that have no corresponding DB column.
+        // karnofskyCategory is used only to drive the two-step Karnofsky picker UI;
+        // the actual numeric score is stored in karnofskyScaleValue.
+        delete flattenedData.karnofskyCategory;
+
         const isUpdate = patientFormData.id !== null && patientFormData.id !== undefined;
         const url = isUpdate ? `${API_BASE_URL}/patients/${patientFormData.id}` : `${API_BASE_URL}/patients`;
         const method = isUpdate ? 'PUT' : 'POST';
