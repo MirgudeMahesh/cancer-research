@@ -21,7 +21,7 @@ const AdminDashboard = () => {
 
     const fetchPractitioners = async () => {
         try {
-            const response = await fetch('https://cancer-research-backend-1.onrender.com/api/admin/practitioners');
+            const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/admin/practitioners');
             const data = await response.json();
             if (data.success) {
                 setPractitioners(data.practitioners);
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
         if (!window.confirm('Are you sure you want to approve this practitioner?')) return;
         setProcessingId(id);
         try {
-            const response = await fetch(`https://cancer-research-backend-1.onrender.com/api/admin/practitioners/${id}/approve`, { method: 'POST' });
+            const response = await fetch(`https://cancer-research-backend-1flb.onrender.com/api/admin/practitioners/${id}/approve`, { method: 'POST' });
             const data = await response.json();
             if (data.success) {
                 alert(data.message);
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
         const id = showRejectModal;
         setProcessingId(id);
         try {
-            const response = await fetch(`https://cancer-research-backend-1.onrender.com/api/admin/practitioners/${id}/reject`, {
+            const response = await fetch(`https://cancer-research-backend-1flb.onrender.com/api/admin/practitioners/${id}/reject`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ remarks })

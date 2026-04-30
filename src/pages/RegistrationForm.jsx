@@ -106,7 +106,7 @@ const RegistrationForm = () => {
         if (validate()) {
             setIsSubmitting(true);
             try {
-                const response = await fetch('https://cancer-research-backend-1.onrender.com/api/register', {
+                const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

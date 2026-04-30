@@ -10,7 +10,7 @@ export const useAuth = () => {
     return context;
 };
 
-const API_BASE_URL = 'https://cancer-research-backend-1.onrender.com/api';
+const API_BASE_URL = 'https://cancer-research-backend-1flb.onrender.com/api';
 
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
