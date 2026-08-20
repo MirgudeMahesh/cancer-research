@@ -31,12 +31,16 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, passwordHash) => {
         try {
+            const formData = new URLSearchParams();
+            formData.append('email', email);
+            formData.append('password_hash', passwordHash);
+
             const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({ email, password_hash: passwordHash }),
+                body: formData.toString(),
             });
 
             const data = await response.json();

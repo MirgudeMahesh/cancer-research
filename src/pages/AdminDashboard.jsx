@@ -59,10 +59,13 @@ const AdminDashboard = () => {
         const id = showRejectModal;
         setProcessingId(id);
         try {
+            const formData = new URLSearchParams();
+            formData.append('remarks', remarks);
+
             const response = await fetch(`https://cancer-research-backend-1flb.onrender.com/api/admin/practitioners/${id}/reject`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ remarks })
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
             });
             const data = await response.json();
             if (data.success) {

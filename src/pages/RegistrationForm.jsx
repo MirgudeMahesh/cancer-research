@@ -106,12 +106,19 @@ const RegistrationForm = () => {
         if (validate()) {
             setIsSubmitting(true);
             try {
+                const formDataEncoded = new URLSearchParams();
+                Object.keys(formData).forEach(key => {
+                    if (formData[key] !== null && formData[key] !== undefined) {
+                        formDataEncoded.append(key, formData[key]);
+                    }
+                });
+
                 const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/register', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify(formData),
+                    body: formDataEncoded.toString(),
                 });
 
                 const data = await response.json();

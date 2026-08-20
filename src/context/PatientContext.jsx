@@ -92,12 +92,19 @@ export const PatientProvider = ({ children }) => {
         const method = isUpdate ? 'PUT' : 'POST';
 
         try {
+            const formData = new URLSearchParams();
+            Object.keys(flattenedData).forEach(key => {
+                if (flattenedData[key] !== null && flattenedData[key] !== undefined) {
+                    formData.append(key, flattenedData[key]);
+                }
+            });
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify(flattenedData),
+                body: formData.toString(),
             });
 
             const data = await response.json();
