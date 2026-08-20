@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
             formData.append('email', email);
             formData.append('password_hash', passwordHash);
 
-            const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/login', {
+            const response = await fetch('https://cancer-research-backend.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

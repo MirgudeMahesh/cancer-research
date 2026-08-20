@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "https://cancer-research-backend-1flb.onrender.com/api/:path*"
+            "destination": "https://cancer-research-backend.onrender.com/api/:path*"
         },
         {
             "source": "/(.*)",

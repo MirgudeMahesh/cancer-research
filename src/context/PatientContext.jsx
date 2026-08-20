@@ -44,7 +44,7 @@ export const PatientProvider = ({ children }) => {
         if (!currentUser?.id) return;
         setIsLoading(true);
         try {
-            const response = await fetch(`https://cancer-research-backend-1flb.onrender.com/api/patients/doctor/${currentUser.id}`);
+            const response = await fetch(`https://cancer-research-backend.onrender.com/api/patients/doctor/${currentUser.id}`);
             const data = await response.json();
             if (data.success) {
                 // Parse JSON columns back into objects/arrays
@@ -88,7 +88,7 @@ export const PatientProvider = ({ children }) => {
         delete flattenedData.karnofskyCategory;
 
         const isUpdate = patientFormData.id !== null && patientFormData.id !== undefined;
-        const url = isUpdate ? `https://cancer-research-backend-1flb.onrender.com/api/patients/${patientFormData.id}` : 'https://cancer-research-backend-1flb.onrender.com/api/patients';
+        const url = isUpdate ? `https://cancer-research-backend.onrender.com/api/patients/${patientFormData.id}` : 'https://cancer-research-backend.onrender.com/api/patients';
         const method = isUpdate ? 'PUT' : 'POST';
 
         try {

@@ -113,7 +113,7 @@ const RegistrationForm = () => {
                     }
                 });
 
-                const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/register', {
+                const response = await fetch('https://cancer-research-backend.onrender.com/api/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
