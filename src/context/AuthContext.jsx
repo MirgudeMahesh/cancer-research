@@ -10,8 +10,6 @@ export const useAuth = () => {
     return context;
 };
 
-const API_BASE_URL = 'https://cancer-research-backend-1flb.onrender.com/api';
-
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -33,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, passwordHash) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/login`, {
+            const response = await fetch('https://cancer-research-backend-1flb.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
